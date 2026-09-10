@@ -1,0 +1,55 @@
+{
+  "events": [
+    {
+      "category": "janan-band",
+      "month": "August",
+      "start": "2026-08-09",
+      "end": "2026-08-09",
+      "title": "Janan Band Live",
+      "description": "Janan Band presents a live performance featuring Ayaan Khan — a soulful evening of Sufi music and great vibes with premium shisha, exotic food, board games and PlayStations.",
+      "guest": "Ayaan Khan",
+      "time": "10:00 PM onwards",
+      "venue": "Main Lounge",
+      "offer": "Entry free",
+      "image": "assets/images/events/janan-band-live.webp",
+      "imageAlt": "Janan Band live performance featuring Ayaan Khan at DESIRE SHEESHA LOUNGE, Oud Metha",
+      "imageWidth": 682,
+      "imageHeight": 1024,
+      "features": ["Live Sufi Music", "Premium Shisha", "Exotic Food", "Board Games & PlayStations"]
+    },
+    {
+      "category": "sufi-night",
+      "month": "August",
+      "start": "2026-08-14",
+      "end": "2026-08-14",
+      "title": "Sufi Night",
+      "description": "A soulful evening of Sufi music and great vibes — live performance with premium shisha, exotic food, board games and PlayStations.",
+      "guest": "Wagashaider",
+      "time": "10:00 PM onwards",
+      "venue": "Main Lounge",
+      "offer": "Entry free",
+      "image": "assets/images/events/sufi-night.webp",
+      "imageAlt": "Sufi Night live performance featuring Wagashaider at DESIRE SHEESHA LOUNGE, Oud Metha",
+      "imageWidth": 1024,
+      "imageHeight": 1024,
+      "features": ["Live Sufi Music", "Premium Shisha", "Exotic Food", "Board Games & PlayStations"]
+    },
+    {
+      "category": "live-music",
+      "month": "August",
+      "start": "2026-08-16",
+      "end": "2026-08-16",
+      "title": "Live Music Night",
+      "description": "Live singing performance by Saffi Zulfiqar. Free entry, everyone welcome — with exotic food, premium shisha, comfy lounge, live sports and gaming.",
+      "guest": "Saffi Zulfiqar",
+      "time": "10:00 PM onwards",
+      "venue": "Main Lounge",
+      "offer": "Entry free",
+      "image": "assets/images/events/live-music-night.webp",
+      "imageAlt": "Live Music Night featuring Saffi Zulfiqar at DESIRE SHEESHA LOUNGE, Oud Metha",
+      "imageWidth": 1024,
+      "imageHeight": 1536,
+      "features": ["Exotic Food", "Premium Shisha", "Comfy Lounge", "Live Music", "Live Sports", "Gaming Zone"]
+    }
+  ]
+}

@@ -1,0 +1,557 @@
+{
+  "brand": {
+    "name": "DESIRE SHEESHA LOUNGE",
+    "tagline": "Where premium food meets premium shisha.",
+    "subtitle": "Sheesha Lounge"
+  },
+  "categories": [
+    {
+      "id": "breakfast",
+      "name": "Breakfast",
+      "icon": "breakfast",
+      "description": "Morning favourites",
+      "blurb": "Explore our handcrafted vegetarian & non-vegetarian breakfast."
+    },
+    {
+      "id": "chaat",
+      "name": "Chaat & Snacks",
+      "icon": "chaat",
+      "description": "Street-style bites",
+      "blurb": "Explore our handcrafted vegetarian & non-vegetarian chaat & snacks."
+    },
+    {
+      "id": "starters",
+      "name": "Starters",
+      "icon": "starters",
+      "description": "Crisp bites to start",
+      "blurb": "Explore our handcrafted vegetarian & non-vegetarian starters."
+    },
+    {
+      "id": "main-course",
+      "name": "Main Course",
+      "icon": "main-course",
+      "description": "Hearty plates",
+      "blurb": "Explore our handcrafted vegetarian & non-vegetarian main course."
+    },
+    {
+      "id": "indo-chinese",
+      "name": "Indo-Chinese",
+      "icon": "indo-chinese",
+      "description": "Wok-tossed favourites",
+      "blurb": "Explore our handcrafted vegetarian & non-vegetarian Indo-Chinese."
+    },
+    {
+      "id": "rice-biryani",
+      "name": "Rice & Biryani",
+      "icon": "rice-biryani",
+      "description": "Aromatic rice dishes",
+      "blurb": "Explore our handcrafted vegetarian & non-vegetarian rice & biryani."
+    },
+    {
+      "id": "italian",
+      "name": "Italian",
+      "icon": "italian",
+      "description": "Pasta, pizza & more",
+      "blurb": "Explore our handcrafted vegetarian & non-vegetarian Italian dishes."
+    },
+    {
+      "id": "burgers-sandwiches",
+      "name": "Burgers & Sandwiches",
+      "icon": "burgers-sandwiches",
+      "description": "Stacked & sizzling",
+      "blurb": "Explore our handcrafted vegetarian & non-vegetarian burgers & sandwiches."
+    },
+    {
+      "id": "soups-salads",
+      "name": "Soups & Salads",
+      "icon": "soups-salads",
+      "description": "Light & fresh",
+      "blurb": "Explore our handcrafted vegetarian & non-vegetarian soups & salads."
+    },
+    {
+      "id": "fumes-specials",
+      "name": "Desire Specials",
+      "icon": "fumes-specials",
+      "description": "Chef signatures",
+      "blurb": "Explore our handcrafted vegetarian & non-vegetarian Desire specials."
+    },
+    {
+      "id": "hot-beverages",
+      "name": "Hot Beverages",
+      "icon": "hot-beverages",
+      "description": "Warm sips",
+      "blurb": "Explore our handcrafted hot beverages."
+    },
+    {
+      "id": "cold-beverages",
+      "name": "Cold Beverages",
+      "icon": "cold-beverages",
+      "description": "Cool refreshers",
+      "blurb": "Explore our handcrafted cold beverages."
+    },
+    {
+      "id": "desserts",
+      "name": "Desserts",
+      "icon": "desserts",
+      "description": "Sweet endings",
+      "blurb": "Explore our handcrafted vegetarian desserts."
+    },
+    {
+      "id": "shisha",
+      "name": "Shisha",
+      "icon": "shisha",
+      "description": "Premium blends",
+      "blurb": "Explore our premium shisha blends."
+    },
+    {
+      "id": "lunch",
+      "name": "Lunch",
+      "icon": "lunch",
+      "description": "Midday favourites",
+      "blurb": "Explore our handcrafted vegetarian & non-vegetarian lunch."
+    }
+  ],
+  "shishaCategories": [
+    {
+      "id": "classic-flavours",
+      "name": "Classic Flavours",
+      "icon": "classic-flavours"
+    },
+    {
+      "id": "premium-blends",
+      "name": "Premium Blends",
+      "icon": "premium-blends"
+    },
+    {
+      "id": "ff-signature",
+      "name": "F&F Signature",
+      "icon": "ff-signature"
+    },
+    {
+      "id": "premium-bases",
+      "name": "Premium Bases",
+      "icon": "premium-bases"
+    },
+    {
+      "id": "enhancements",
+      "name": "Enhancements",
+      "icon": "enhancements"
+    }
+  ],
+  "products": [
+    {
+      "id": "st-01",
+      "name": "Veg Seekh Kabab",
+      "category": "starters",
+      "price": 25,
+      "veg": true,
+      "description": "Chargrilled vegetable skewers with mint chutney.",
+      "image": "https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=600&q=80"
+    },
+    {
+      "id": "st-02",
+      "name": "Chicken Tikka",
+      "category": "starters",
+      "price": 32,
+      "veg": false,
+      "description": "Tandoor-smoked chicken with yogurt marinade.",
+      "image": "https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=600&q=80&sat=-20"
+    },
+    {
+      "id": "st-03",
+      "name": "Paneer Tikka",
+      "category": "starters",
+      "price": 28,
+      "veg": true,
+      "description": "Cottage cheese cubes roasted with spices.",
+      "image": "https://images.unsplash.com/photo-1567188040759-fb8a883dc6d9?w=600&q=80"
+    },
+    {
+      "id": "st-04",
+      "name": "Fish Fingers",
+      "category": "starters",
+      "price": 35,
+      "veg": false,
+      "description": "Crispy batter-fried fish with tartar dip.",
+      "image": "https://images.unsplash.com/photo-1580476262798-bddd9f4b7369?w=600&q=80"
+    },
+    {
+      "id": "mc-01",
+      "name": "Butter Chicken",
+      "category": "main-course",
+      "price": 42,
+      "veg": false,
+      "description": "Creamy tomato gravy with tender chicken.",
+      "image": "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=600&q=80"
+    },
+    {
+      "id": "mc-02",
+      "name": "Dal Makhani",
+      "category": "main-course",
+      "price": 28,
+      "veg": true,
+      "description": "Slow-cooked black lentils in butter cream.",
+      "image": "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=600&q=80"
+    },
+    {
+      "id": "mc-03",
+      "name": "Mutton Rogan Josh",
+      "category": "main-course",
+      "price": 48,
+      "veg": false,
+      "description": "Kashmiri-style aromatic mutton curry.",
+      "image": "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=600&q=80"
+    },
+    {
+      "id": "mc-04",
+      "name": "Paneer Butter Masala",
+      "category": "main-course",
+      "price": 34,
+      "veg": true,
+      "description": "Silky makhani sauce with soft paneer.",
+      "image": "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=600&q=80"
+    },
+    {
+      "id": "bg-01",
+      "name": "Classic Smash Burger",
+      "category": "burgers-sandwiches",
+      "price": 30,
+      "veg": false,
+      "description": "Double smash patty, cheddar & secret sauce.",
+      "image": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&q=80"
+    },
+    {
+      "id": "bg-02",
+      "name": "Crispy Paneer Burger",
+      "category": "burgers-sandwiches",
+      "price": 27,
+      "veg": true,
+      "description": "Golden paneer patty with spicy mayo.",
+      "image": "https://images.unsplash.com/photo-1550547660-d9450f859349?w=600&q=80"
+    },
+    {
+      "id": "bg-03",
+      "name": "BBQ Chicken Burger",
+      "category": "burgers-sandwiches",
+      "price": 33,
+      "veg": false,
+      "description": "Smoky BBQ chicken, onion rings & cheddar.",
+      "image": "https://images.unsplash.com/photo-1553979459-d2229ba7433b?w=600&q=80"
+    },
+    {
+      "id": "pz-01",
+      "name": "Margherita",
+      "category": "italian",
+      "price": 35,
+      "veg": true,
+      "description": "San Marzano tomato, mozzarella, basil.",
+      "image": "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=600&q=80"
+    },
+    {
+      "id": "pz-02",
+      "name": "Pepperoni Feast",
+      "category": "italian",
+      "price": 45,
+      "veg": false,
+      "description": "Loaded pepperoni with mozzarella melt.",
+      "image": "https://images.unsplash.com/photo-1628840042765-356cda07504e?w=600&q=80"
+    },
+    {
+      "id": "pz-03",
+      "name": "Truffle Mushroom",
+      "category": "italian",
+      "price": 48,
+      "veg": true,
+      "description": "Wild mushrooms with truffle oil drizzle.",
+      "image": "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=600&q=80"
+    },
+    {
+      "id": "su-01",
+      "name": "California Roll",
+      "category": "italian",
+      "price": 39,
+      "veg": false,
+      "description": "Crab stick, avocado & cucumber roll.",
+      "image": "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=600&q=80"
+    },
+    {
+      "id": "su-02",
+      "name": "Veg Avocado Roll",
+      "category": "italian",
+      "price": 32,
+      "veg": true,
+      "description": "Creamy avocado with sesame finish.",
+      "image": "https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?w=600&q=80"
+    },
+    {
+      "id": "ch-01",
+      "name": "Chilli Paneer",
+      "category": "indo-chinese",
+      "price": 29,
+      "veg": true,
+      "description": "Indo-Chinese tossed paneer with peppers.",
+      "image": "https://images.unsplash.com/photo-1626804475297-41608ea09aeb?w=600&q=80"
+    },
+    {
+      "id": "ch-02",
+      "name": "Chicken Manchurian",
+      "category": "indo-chinese",
+      "price": 34,
+      "veg": false,
+      "description": "Crispy chicken in tangy Manchurian sauce.",
+      "image": "https://images.unsplash.com/photo-1525755662778-989d0524087e?w=600&q=80"
+    },
+    {
+      "id": "ds-01",
+      "name": "Chocolate Lava Cake",
+      "category": "desserts",
+      "price": 22,
+      "veg": true,
+      "description": "Warm cake with molten chocolate centre.",
+      "image": "https://images.unsplash.com/photo-1624353365286-3f8d62daad51?w=600&q=80"
+    },
+    {
+      "id": "ds-02",
+      "name": "Gulab Jamun",
+      "category": "desserts",
+      "price": 16,
+      "veg": true,
+      "description": "Soft milk dumplings in rose syrup.",
+      "image": "https://images.unsplash.com/photo-1666190102259-d5e2b0c8f0e8?w=600&q=80"
+    },
+    {
+      "id": "sh-01",
+      "name": "Double Apple",
+      "category": "shisha",
+      "price": 55,
+      "veg": true,
+      "description": "Classic double apple premium blend.",
+      "image": "https://images.unsplash.com/photo-1543007630-9710e4a00a20?w=600&q=80"
+    },
+    {
+      "id": "sh-02",
+      "name": "Mint Chill",
+      "category": "shisha",
+      "price": 55,
+      "veg": true,
+      "description": "Cool mint with a crisp finish.",
+      "image": "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=600&q=80"
+    },
+    {
+      "id": "sh-03",
+      "name": "Blueberry Mist",
+      "category": "shisha",
+      "price": 60,
+      "veg": true,
+      "description": "Sweet blueberry cloud experience.",
+      "image": "https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=600&q=80"
+    },
+    {
+      "id": "ck-01",
+      "name": "Old Fashioned",
+      "category": "cold-beverages",
+      "price": 45,
+      "veg": true,
+      "description": "Whiskey, bitters, orange & sugar.",
+      "image": "https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=600&q=80"
+    },
+    {
+      "id": "ck-02",
+      "name": "Espresso Martini",
+      "category": "cold-beverages",
+      "price": 48,
+      "veg": true,
+      "description": "Vodka, coffee liqueur & fresh espresso.",
+      "image": "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=600&q=80"
+    },
+    {
+      "id": "mk-01",
+      "name": "Virgin Mojito",
+      "category": "cold-beverages",
+      "price": 22,
+      "veg": true,
+      "description": "Mint, lime & soda sparkle.",
+      "image": "https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=600&q=80"
+    },
+    {
+      "id": "mk-02",
+      "name": "Berry Cooler",
+      "category": "cold-beverages",
+      "price": 24,
+      "veg": true,
+      "description": "Mixed berries with citrus fizz.",
+      "image": "https://images.unsplash.com/photo-1544145945-f904253e7247?w=600&q=80"
+    },
+    {
+      "id": "cf-01",
+      "name": "Cappuccino",
+      "category": "hot-beverages",
+      "price": 18,
+      "veg": true,
+      "description": "Espresso with steamed milk foam.",
+      "image": "https://images.unsplash.com/photo-1572442388796-11668a67e53d?w=600&q=80"
+    },
+    {
+      "id": "cf-02",
+      "name": "Cold Brew",
+      "category": "hot-beverages",
+      "price": 20,
+      "veg": true,
+      "description": "Slow-steeped, smooth & bold.",
+      "image": "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=600&q=80"
+    },
+    {
+      "id": "bv-01",
+      "name": "Fresh Lime Soda",
+      "category": "cold-beverages",
+      "price": 12,
+      "veg": true,
+      "description": "Sweet, salty or mixed — your call.",
+      "image": "https://images.unsplash.com/photo-1622597467836-f3285f2131b8?w=600&q=80"
+    },
+    {
+      "id": "cm-01",
+      "name": "Hookah + Starters Combo",
+      "category": "fumes-specials",
+      "price": 90,
+      "veg": true,
+      "description": "Any shisha with a starter platter for two.",
+      "image": "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=600&q=80"
+    },
+    {
+      "id": "sp-01",
+      "name": "Truffle Risotto",
+      "category": "fumes-specials",
+      "price": 52,
+      "veg": true,
+      "description": "Chef's creamy truffle risotto special.",
+      "image": "https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=600&q=80"
+    },
+    {
+      "id": "pl-01",
+      "name": "Mezze Platter",
+      "category": "fumes-specials",
+      "price": 65,
+      "veg": true,
+      "description": "Hummus, falafel, olives & warm pita.",
+      "image": "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=600&q=80"
+    },
+    {
+      "id": "pl-02",
+      "name": "Non-Veg Grill Platter",
+      "category": "fumes-specials",
+      "price": 89,
+      "veg": false,
+      "description": "Chicken tikka, seekh & fish fingers.",
+      "image": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&q=80"
+    },
+    {
+      "id": "bf-01",
+      "name": "Masala Omelette",
+      "category": "breakfast",
+      "price": 22,
+      "veg": false,
+      "description": "Spiced omelette with onion, tomato and green chilli.",
+      "image": "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=600&q=80"
+    },
+    {
+      "id": "bf-02",
+      "name": "Veg Paratha Platter",
+      "category": "breakfast",
+      "price": 24,
+      "veg": true,
+      "description": "Stuffed parathas served with curd and pickle.",
+      "image": "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&q=80"
+    },
+    {
+      "id": "ch-03",
+      "name": "Pani Puri",
+      "category": "chaat",
+      "price": 18,
+      "veg": true,
+      "description": "Crisp puris with spiced water and chutneys.",
+      "image": "https://images.unsplash.com/photo-1606491956689-2ea866880017?w=600&q=80"
+    },
+    {
+      "id": "ch-04",
+      "name": "Samosa Chaat",
+      "category": "chaat",
+      "price": 20,
+      "veg": true,
+      "description": "Crushed samosa topped with chutney and sev.",
+      "image": "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600&q=80"
+    },
+    {
+      "id": "br-01",
+      "name": "Butter Naan",
+      "category": "main-course",
+      "price": 12,
+      "veg": true,
+      "description": "Soft tandoor naan brushed with butter.",
+      "image": "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&q=80"
+    },
+    {
+      "id": "br-02",
+      "name": "Garlic Naan",
+      "category": "main-course",
+      "price": 14,
+      "veg": true,
+      "description": "Tandoor-baked naan with garlic and herbs.",
+      "image": "https://images.unsplash.com/photo-1626074353765-517a681e40be?w=600&q=80"
+    },
+    {
+      "id": "ln-01",
+      "name": "Lunch Thali",
+      "category": "lunch",
+      "price": 35,
+      "veg": true,
+      "description": "Complete midday thali with dal, sabzi, rice and bread.",
+      "image": "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=600&q=80"
+    },
+    {
+      "id": "ln-02",
+      "name": "Chicken Lunch Box",
+      "category": "lunch",
+      "price": 38,
+      "veg": false,
+      "description": "Curry, rice and salad packed for a satisfying lunch.",
+      "image": "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=600&q=80"
+    },
+    {
+      "id": "rb-01",
+      "name": "Veg Biryani",
+      "category": "rice-biryani",
+      "price": 32,
+      "veg": true,
+      "description": "Fragrant basmati rice with seasonal vegetables.",
+      "image": "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=600&q=80"
+    },
+    {
+      "id": "rb-02",
+      "name": "Chicken Biryani",
+      "category": "rice-biryani",
+      "price": 38,
+      "veg": false,
+      "description": "Dum-cooked chicken biryani with raita.",
+      "image": "https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=600&q=80"
+    },
+    {
+      "id": "ss-01",
+      "name": "Tomato Soup",
+      "category": "soups-salads",
+      "price": 16,
+      "veg": true,
+      "description": "Creamy roasted tomato soup with herbs.",
+      "image": "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=600&q=80"
+    },
+    {
+      "id": "ss-02",
+      "name": "Garden Salad",
+      "category": "soups-salads",
+      "price": 18,
+      "veg": true,
+      "description": "Fresh greens with house dressing.",
+      "image": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&q=80"
+    }
+  ]
+}

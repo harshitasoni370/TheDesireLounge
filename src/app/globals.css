@@ -1,0 +1,12 @@
+@import "tailwindcss";
+@import "./legacy.css";
+
+@theme inline {
+  --color-brand-bg: #000000;
+  --color-brand-card: #121212;
+  --color-brand-accent: #c9a24b;
+  --color-brand-muted: #a3a3a3;
+  --font-display: "Cinzel", "Playfair Display", Georgia, serif;
+  --font-script: "Great Vibes", cursive;
+  --font-body: "Roboto", system-ui, sans-serif;
+}
