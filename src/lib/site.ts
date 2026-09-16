@@ -12,8 +12,8 @@ export const NAV_LINKS: NavLinkItem[] = [
 ];
 
 export const GAMING_LINKS: NavLinkItem[] = [
-  { label: "PlayStation", href: "https://dl.thedesirelounge.com/playstation.html", external: true },
-  { label: "Board Games", href: "https://dl.thedesirelounge.com/board-games.html", external: true },
+  { label: "PlayStation", href: "/playstation" },
+  { label: "Board Games", href: "/board-games" },
 ];
 
 export const NAV_LINKS_TAIL: NavLinkItem[] = [

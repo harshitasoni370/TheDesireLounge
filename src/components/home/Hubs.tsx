@@ -67,7 +67,7 @@ export function Hubs() {
               <li>Big Screen Experience</li>
               <li>Group Play &amp; Tournaments</li>
             </ul>
-            <a href="#gaming-zone" className="home-link">
+            <a href="/playstation" className="home-link">
               Explore Gaming →
             </a>
           </div>

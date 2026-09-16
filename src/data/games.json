@@ -1,0 +1,23 @@
+{
+  "playstation": [
+    { "id": "8f6e1cfd-73b7-483d-b032-41a90e5b39c9", "name": "Call of Duty", "categoryName": "Action", "playersMin": 1, "playersMax": 4, "durationMin": 20, "durationMax": 60, "difficulty": "Medium", "imagePath": "Image/Playstation/thedesire/CALLOFDUTY.webp", "isAvailable": true },
+    { "id": "87e10429-797d-46ce-b3d3-25eb455237a9", "name": "EA Sports FC", "categoryName": "Sports", "playersMin": 1, "playersMax": 4, "durationMin": 15, "durationMax": 45, "difficulty": "Easy", "imagePath": "Image/Playstation/thedesire/EASPORTSFC.webp", "isAvailable": true },
+    { "id": "b8b566d3-4963-437c-b226-621d7de619d7", "name": "Fortnite", "categoryName": "Multiplayer", "playersMin": 1, "playersMax": 4, "durationMin": 20, "durationMax": 45, "difficulty": "Easy", "imagePath": "Image/Playstation/thedesire/fortnite.webp", "isAvailable": true },
+    { "id": "f3ebf148-f114-46f3-a772-c84d3cfec89c", "name": "Gran Turismo", "categoryName": "Racing", "playersMin": 1, "playersMax": 2, "durationMin": 20, "durationMax": 45, "difficulty": "Medium", "imagePath": "Image/Playstation/thedesire/GRANTURISMO.webp", "isAvailable": true },
+    { "id": "befc07ec-8289-4c6a-9767-0c7c4b9b4674", "name": "Mortal Kombat", "categoryName": "Fighting", "playersMin": 1, "playersMax": 2, "durationMin": 10, "durationMax": 30, "difficulty": "Medium", "imagePath": "Image/Playstation/thedesire/mortal-kombat.webp", "isAvailable": false },
+    { "id": "2ccfb3cb-8e70-46eb-99e5-f46094d794b1", "name": "NBA 2K", "categoryName": "Sports", "playersMin": 1, "playersMax": 4, "durationMin": 20, "durationMax": 45, "difficulty": "Easy", "imagePath": "Image/Playstation/thedesire/nba2k.webp", "isAvailable": true },
+    { "id": "66089ff6-eac3-4631-bc1f-807613d82739", "name": "Need for Speed", "categoryName": "Racing", "playersMin": 1, "playersMax": 2, "durationMin": 15, "durationMax": 40, "difficulty": "Medium", "imagePath": "Image/Playstation/thedesire/nfs.webp", "isAvailable": true },
+    { "id": "dfd73647-4c61-4471-99de-00e2f0f41c03", "name": "Spider-Man", "categoryName": "Adventure", "playersMin": 1, "playersMax": 1, "durationMin": 30, "durationMax": 60, "difficulty": "Easy", "imagePath": "Image/Playstation/thedesire/spiderman.webp", "isAvailable": true },
+    { "id": "41a9f48d-b6e0-49e1-85ca-6db39ad4ce1f", "name": "Tekken", "categoryName": "Fighting", "playersMin": 1, "playersMax": 2, "durationMin": 10, "durationMax": 30, "difficulty": "Medium", "imagePath": "Image/Playstation/thedesire/tekken.webp", "isAvailable": true }
+  ],
+  "board-games": [
+    { "id": "0a460def-c9a8-42df-98c6-0b9062777e45", "name": "Chess", "categoryName": "Strategy", "playersMin": 2, "playersMax": 2, "durationMin": 30, "durationMax": 60, "difficulty": "Medium", "imagePath": "Image/BoardGame/thedesire/chess.webp", "isAvailable": true },
+    { "id": "c9ff5ed5-5fa4-4821-acaa-1bee3b4e40d7", "name": "Connect 4", "categoryName": "Two Players", "playersMin": 2, "playersMax": 2, "durationMin": 10, "durationMax": 20, "difficulty": "Easy", "imagePath": "Image/BoardGame/thedesire/connect4.webp", "isAvailable": false },
+    { "id": "09c6eb40-1ea8-4759-0414-eadf4d0cbae8", "name": "Jenga", "categoryName": "Party", "playersMin": 1, "playersMax": 8, "durationMin": 20, "durationMax": 30, "difficulty": "Easy", "imagePath": "Image/BoardGame/thedesire/jenga.webp", "isAvailable": true },
+    { "id": "c9c99e71-2d00-4727-b1e7-598154033718", "name": "Ludo", "categoryName": "Kids", "playersMin": 2, "playersMax": 4, "durationMin": 20, "durationMax": 40, "difficulty": "Easy", "imagePath": "Image/BoardGame/thedesire/ludo.webp", "isAvailable": true },
+    { "id": "e641f7f0-8d80-4029-99d6-d4f714d6d401", "name": "Monopoly", "categoryName": "Family", "playersMin": 2, "playersMax": 8, "durationMin": 60, "durationMax": 180, "difficulty": "Easy", "imagePath": "Image/BoardGame/thedesire/monopoly.webp", "isAvailable": true },
+    { "id": "b48801d9-159f-4706-bc26-20e7abec0125", "name": "Pictionary", "categoryName": "Party", "playersMin": 3, "playersMax": 16, "durationMin": 30, "durationMax": 60, "difficulty": "Easy", "imagePath": "Image/BoardGame/thedesire/pictionary.webp", "isAvailable": true },
+    { "id": "e53651fa-de0e-4883-908b-493a8fca95ed", "name": "Scrabble", "categoryName": "Family", "playersMin": 2, "playersMax": 4, "durationMin": 45, "durationMax": 90, "difficulty": "Medium", "imagePath": "Image/BoardGame/thedesire/scrabble.webp", "isAvailable": true },
+    { "id": "954ac6df-8228-4447-b8d6-acb0eeac00b9", "name": "Uno", "categoryName": "Card Games", "playersMin": 2, "playersMax": 10, "durationMin": 15, "durationMax": 30, "difficulty": "Easy", "imagePath": "Image/BoardGame/thedesire/uno.webp", "isAvailable": true }
+  ]
+}

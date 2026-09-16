@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { PageHero } from "@/components/shared/PageHero";
 import { HighlightsStrip } from "@/components/shared/HighlightsStrip";
 import { SportsSchedule } from "@/components/live-sports/SportsSchedule";
@@ -54,7 +55,7 @@ const HIGHLIGHTS = [
   },
 ];
 
-export default function LiveSportsPage() {
+function LiveSportsContent() {
   return (
     <main id="main">
       <PageHero
@@ -107,4 +108,8 @@ export default function LiveSportsPage() {
       />
     </main>
   );
+}
+
+export default function LiveSportsPage() {
+  return <Suspense fallback={<main id="main" aria-busy="true" /> }><LiveSportsContent /></Suspense>;
 }

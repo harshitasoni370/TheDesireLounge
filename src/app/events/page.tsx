@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { PageHero } from "@/components/shared/PageHero";
 import { HighlightsStrip } from "@/components/shared/HighlightsStrip";
 import { EventsSchedule } from "@/components/events/EventsSchedule";
@@ -55,7 +56,7 @@ const HIGHLIGHTS = [
   },
 ];
 
-export default function EventsPage() {
+function EventsContent() {
   return (
     <main id="main">
       <PageHero
@@ -108,4 +109,8 @@ export default function EventsPage() {
       />
     </main>
   );
+}
+
+export default function EventsPage() {
+  return <Suspense fallback={<main id="main" aria-busy="true" />}><EventsContent /></Suspense>;
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import scheduleData from "@/data/sports-schedule.json";
 
 interface Fixture {
@@ -14,6 +15,7 @@ interface Fixture {
   venue: string;
   time: string;
   channel: string;
+  id?: string;
 }
 
 type Status = "live" | "upcoming" | "past";
@@ -73,7 +75,286 @@ function titleCaseMonth(slug: string) {
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50];
 
+const REMOTE_API_BASE = "https://restaurents-api.cylsys.com";
+/** Dev proxy path — see the `rewrites` block in next.config.ts. Avoids CORS on localhost. */
+const DEV_API_BASE = "/live-sports-api";
+
+const LIVE_SPORTS_API = "/api/Livesports/GetLiveSports";
+const LIVE_SPORTS_COMPETITIONS_API = "/api/Livesports/GetLiveSportsCompetitions";
+
+/**
+ * Called from the effect (not at module scope) so `window` is available.
+ * Order: NEXT_PUBLIC_LIVE_SPORTS_BASE -> dev proxy on localhost -> remote.
+ */
+function getApiBase() {
+  const configured = process.env.NEXT_PUBLIC_LIVE_SPORTS_BASE;
+  if (configured) return configured.replace(/\/$/, "");
+  if (typeof window !== "undefined" && /^(localhost|127\.0\.0\.1|\[::1\])$/.test(window.location.hostname)) {
+    return DEV_API_BASE;
+  }
+  return REMOTE_API_BASE;
+}
+const DEFAULT_COMPANY_ID = "0ffbe39e-abf8-4827-9107-1a04b39f3416";
+const DEFAULT_BRANCH_ID = "f4fb1d76-83a0-4965-86b5-63da28249dae";
+const MENU_CHECKOUT_URL = "https://app.thedesirelounge.com/checkout";
+
+/* ------------------------------------------------------------------ *
+ * Response helpers
+ * The API can answer with a bare array, or wrap it in data / result /
+ * items / records (any casing), or even return a JSON string. All of
+ * those used to end up as an empty list, which is why nothing rendered.
+ * ------------------------------------------------------------------ */
+
+type AnyRecord = Record<string, unknown>;
+
+const LIST_KEYS = ["data", "result", "results", "items", "records", "list", "response", "payload", "value"];
+
+function extractList(payload: unknown, depth = 0): AnyRecord[] {
+  if (payload == null || depth > 4) return [];
+
+  if (typeof payload === "string") {
+    const text = payload.trim();
+    if (!text) return [];
+    try {
+      return extractList(JSON.parse(text), depth + 1);
+    } catch {
+      return [];
+    }
+  }
+
+  if (Array.isArray(payload)) {
+    return payload.filter((item): item is AnyRecord => typeof item === "object" && item !== null);
+  }
+
+  if (typeof payload === "object") {
+    const obj = payload as AnyRecord;
+    for (const key of Object.keys(obj)) {
+      if (LIST_KEYS.includes(key.toLowerCase())) {
+        const nested = extractList(obj[key], depth + 1);
+        if (nested.length) return nested;
+      }
+    }
+    // Fall back to the first array-ish value on the object.
+    for (const key of Object.keys(obj)) {
+      const value = obj[key];
+      if (Array.isArray(value)) {
+        const nested = extractList(value, depth + 1);
+        if (nested.length) return nested;
+      }
+    }
+  }
+
+  return [];
+}
+
+/** Case-insensitive field lookup, so PascalCase payloads work too. */
+function pick(item: AnyRecord, ...names: string[]): string {
+  const keys = Object.keys(item);
+  for (const name of names) {
+    const match = keys.find((key) => key.toLowerCase() === name.toLowerCase());
+    if (match) {
+      const value = item[match];
+      if (value != null && value !== "") return String(value);
+    }
+  }
+  return "";
+}
+
+function toDate(value: string | undefined) {
+  if (!value) return "";
+  const trimmed = value.trim();
+  // "2026-09-15 00:00:00" / "2026-09-15T00:00:00" / "2026-09-15"
+  const iso = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+  // "15/09/2026" or "15-09-2026"
+  const dmy = trimmed.match(/^(\d{2})[/-](\d{2})[/-](\d{4})/);
+  if (dmy) return `${dmy[3]}-${dmy[2]}-${dmy[1]}`;
+  const parsed = new Date(trimmed);
+  if (!Number.isNaN(parsed.getTime())) {
+    const mm = String(parsed.getMonth() + 1).padStart(2, "0");
+    const dd = String(parsed.getDate()).padStart(2, "0");
+    return `${parsed.getFullYear()}-${mm}-${dd}`;
+  }
+  return "";
+}
+
+function normalizeLiveFixture(item: AnyRecord): Fixture | null {
+  const start = toDate(pick(item, "dateStart", "startDate", "date", "eventDate", "matchDate"));
+  if (!start) return null;
+  const end = toDate(pick(item, "dateEnd", "endDate")) || start;
+  const home = pick(item, "teamHome", "homeTeam", "team1");
+  const away = pick(item, "teamAway", "awayTeam", "team2");
+  const sportValue = pick(item, "sportCategory", "sportCategoryName", "sport", "categoryName").toLowerCase();
+
+  return {
+    id: pick(item, "id", "sportId", "liveSportId") || undefined,
+    sport: sportValue.includes("football") || sportValue.includes("soccer") ? "football" : "cricket",
+    month: new Date(`${start}T12:00:00`).toLocaleString("en-US", { month: "long" }).toLowerCase(),
+    start,
+    end: end >= start ? end : start,
+    competition: pick(item, "competitionName", "competition", "tournamentName") || "Competition TBC",
+    event: pick(item, "eventName", "event", "name", "matchName") || "Upcoming fixture",
+    teams: `${home || "TBC"} vs ${away || "TBC"}`,
+    venue: pick(item, "venue", "venueName", "location") || "Venue TBC",
+    time: pick(item, "uaeTime", "time", "matchTime", "startTime") || "TBC",
+    channel: pick(item, "channel", "channelName", "broadcast") || "Channel TBC",
+  };
+}
+
+function normalizeCompetition(item: AnyRecord): string {
+  return pick(item, "name", "competitionName", "title");
+}
+
+function buildBookingUrl(item: Fixture, context: { companyId: string; branchId: string; sessionId: string; tableId: string }) {
+  const details = {
+    id: item.id || "",
+    name: item.event,
+    sportCategory: item.sport,
+    competitionName: item.competition,
+    teamHome: item.teams.split(" vs ")[0] || "",
+    teamAway: item.teams.split(" vs ")[1] || "",
+    venue: item.venue,
+    dateStart: item.start,
+    uaeTime: item.time,
+    channel: item.channel,
+  };
+  const params = new URLSearchParams({
+    companyId: context.companyId,
+    branchId: context.branchId,
+    ...(context.sessionId ? { sessionId: context.sessionId } : {}),
+    ...(context.tableId ? { tableId: context.tableId } : {}),
+    categoryName: "Live Sports",
+    category: "EVENT",
+    reservationCategory: "EVENT",
+    sessionType: "Live Sports",
+    eventName: item.event,
+    competitionName: item.competition,
+    sportCategory: item.sport,
+    teamHome: details.teamHome,
+    teamAway: details.teamAway,
+    venue: item.venue,
+    dateStart: item.start,
+    uaeTime: item.time,
+    channel: item.channel,
+    reservationTitle: item.event,
+    extraDetails: JSON.stringify(details),
+    step: "about-you",
+    hideSteps: "true",
+    hideCardIcon: "true",
+    hideCurrentSession: "true",
+    showCurrentTable: "false",
+  });
+  return `${MENU_CHECKOUT_URL}?${params.toString()}`;
+}
+
+function isAbort(error: unknown) {
+  return error instanceof DOMException && error.name === "AbortError";
+}
+
+/**
+ * POST first (current API contract); if that is rejected, retry the same
+ * endpoint as GET. Never throws for network/CORS failures — it returns null so
+ * the UI can fall back to the bundled schedule instead of crashing the page.
+ */
+async function requestJson(path: string, body: Record<string, string>, signal: AbortSignal): Promise<unknown> {
+  const url = `${getApiBase()}${path}`;
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(body),
+      signal,
+    });
+    if (response.ok) return await response.json();
+    console.warn(`Live sports POST ${url} -> ${response.status}; retrying as GET`);
+  } catch (error) {
+    if (isAbort(error)) throw error;
+    console.warn(`Live sports POST ${url} failed (network/CORS); retrying as GET`, error);
+  }
+
+  try {
+    const query = new URLSearchParams(body).toString();
+    const response = await fetch(`${url}?${query}`, {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      signal,
+    });
+    if (response.ok) return await response.json();
+    console.warn(`Live sports GET ${url} -> ${response.status}`);
+  } catch (error) {
+    if (isAbort(error)) throw error;
+    console.warn(`Live sports GET ${url} failed (network/CORS)`, error);
+  }
+
+  return null;
+}
+
+const LOCAL_FIXTURES = (scheduleData.fixtures as Fixture[]).map((item) => ({
+  ...item,
+  month: item.month.toLowerCase(),
+}));
+
 export function SportsSchedule() {
+  const searchParams = useSearchParams();
+  const companyId = searchParams.get("companyId") || DEFAULT_COMPANY_ID;
+  const branchId = searchParams.get("branchId") || DEFAULT_BRANCH_ID;
+  const sessionId = searchParams.get("sessionId") || searchParams.get("tableSessionId") || "";
+  const tableId = searchParams.get("tableId") || "";
+  const bookingContext = { companyId, branchId, sessionId, tableId };
+
+  const [apiFixtures, setApiFixtures] = useState<Fixture[] | null>(null);
+  const [apiCompetitions, setApiCompetitions] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    let active = true;
+    setLoading(true);
+    setLoadError(false);
+
+    // Competitions are optional — a failure there must not blank the fixtures.
+    requestJson(LIVE_SPORTS_COMPETITIONS_API, { companyId, branchId }, controller.signal)
+      .then((payload) => {
+        if (!active) return;
+        const names = extractList(payload).map(normalizeCompetition).filter(Boolean);
+        setApiCompetitions(names);
+      })
+      .catch(() => {
+        /* competition dropdown falls back to the competitions found in fixtures */
+      });
+
+    requestJson(LIVE_SPORTS_API, { companyId, branchId, statusFilter: "upcoming" }, controller.signal)
+      .then((payload) => {
+        if (!active) return;
+        const fixtures = extractList(payload)
+          .map(normalizeLiveFixture)
+          .filter((item): item is Fixture => item !== null);
+        // payload === null means the request could not be made at all (CORS/offline).
+        setLoadError(payload === null);
+        // An empty API list should not wipe the page — keep the bundled list.
+        setApiFixtures(fixtures.length ? fixtures : null);
+        setLoading(false);
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        if (isAbort(error)) return;
+        console.error("Live sports API unavailable; using bundled fixtures", error);
+        setApiFixtures(null);
+        setLoadError(true);
+        setLoading(false);
+      });
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [companyId, branchId, reloadKey]);
+
+  const retry = useCallback(() => setReloadKey((n) => n + 1), []);
+
   const today = useMemo(() => {
     const d = new Date();
     d.setHours(12, 0, 0, 0);
@@ -81,17 +362,18 @@ export function SportsSchedule() {
   }, []);
 
   const enriched: EnrichedFixture[] = useMemo(() => {
-    const fixtures = (scheduleData.fixtures as Fixture[]).slice().sort((a, b) => {
+    const fixtures = (apiFixtures || LOCAL_FIXTURES).slice().sort((a, b) => {
       const byStart = a.start.localeCompare(b.start);
       return byStart !== 0 ? byStart : a.sport.localeCompare(b.sport);
     });
     return fixtures.map((item) => ({ ...item, status: getStatus(item.start, item.end, today) }));
-  }, [today]);
+  }, [apiFixtures, today]);
 
-  const competitions = useMemo(
-    () => Array.from(new Set(enriched.map((item) => item.competition))).sort((a, b) => a.localeCompare(b)),
-    [enriched]
-  );
+  const competitions = useMemo(() => {
+    const fromFixtures = enriched.map((item) => item.competition);
+    const source = apiCompetitions.length ? [...apiCompetitions, ...fromFixtures] : fromFixtures;
+    return Array.from(new Set(source.filter(Boolean))).sort((a, b) => a.localeCompare(b));
+  }, [apiCompetitions, enriched]);
 
   const monthsPresent = useMemo(
     () =>
@@ -108,6 +390,16 @@ export function SportsSchedule() {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+
+  // If the selected competition/month is not in the freshly loaded data, reset it
+  // instead of showing an empty grid.
+  useEffect(() => {
+    if (competition !== "all" && !competitions.includes(competition)) setCompetition("all");
+  }, [competitions, competition]);
+
+  useEffect(() => {
+    if (month !== "all" && !monthsPresent.includes(month)) setMonth("all");
+  }, [monthsPresent, month]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -180,8 +472,16 @@ export function SportsSchedule() {
             and broadcast details may update closer to match day.
           </p>
           <p className="sports-schedule__count" aria-live="polite">
-            {filtered.length} fixture{filtered.length === 1 ? "" : "s"}
+            {loading ? "Loading fixtures…" : `${filtered.length} fixture${filtered.length === 1 ? "" : "s"}`}
           </p>
+          {loadError && (
+            <p className="sports-schedule__count" role="status">
+              Live feed unavailable right now — showing our latest saved schedule.{" "}
+              <button type="button" className="sports-toolbar__reset" onClick={retry}>
+                Retry
+              </button>
+            </p>
+          )}
         </div>
 
         <div className="sports-filters" role="search" aria-label="Filter fixtures">
@@ -328,7 +628,7 @@ export function SportsSchedule() {
 
         <div className="sports-cards" aria-live="polite">
           {pageItems.map((item, i) => (
-            <article className="sports-card" data-status={item.status} key={`${item.competition}-${item.start}-${i}`}>
+            <article className="sports-card" data-status={item.status} key={item.id || `${item.competition}-${item.start}-${i}`}>
               <header className="sports-card__head">
                 <span className={`sports-card__sport sports-card__sport--${item.sport}`}>
                   {item.sport === "football" ? "Football" : "Cricket"}
@@ -359,11 +659,16 @@ export function SportsSchedule() {
                   <dd>{item.channel}</dd>
                 </div>
               </dl>
+              <a className="sports-card__book" href={buildBookingUrl(item, bookingContext)}>
+                Book a Table
+              </a>
             </article>
           ))}
         </div>
 
-        {filtered.length === 0 && <p className="sports-empty">No fixtures match these filters. Try another sport or month.</p>}
+        {!loading && filtered.length === 0 && (
+          <p className="sports-empty">No fixtures match these filters. Try another sport or month.</p>
+        )}
 
         <div className="sports-table-wrap" aria-label="Fixtures table">
           <table className="sports-table">
@@ -382,7 +687,7 @@ export function SportsSchedule() {
             </thead>
             <tbody>
               {pageItems.map((item, i) => (
-                <tr className={`sports-table__row sports-table__row--${item.sport}`} key={`row-${item.competition}-${item.start}-${i}`}>
+                <tr className={`sports-table__row sports-table__row--${item.sport}`} key={`row-${item.id || `${item.competition}-${item.start}-${i}`}`}>
                   <td>
                     <span className={`sports-card__sport sports-card__sport--${item.sport}`}>
                       {item.sport === "football" ? "Football" : "Cricket"}

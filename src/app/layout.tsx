@@ -14,6 +14,12 @@ export const metadata: Metadata = {
   },
   description:
     "DESIRE SHEESHA LOUNGE — Eat. Chill. Play. 24/7. Premium lounge, multi-cuisine food, live sports & gaming zone in Oud Metha, Dubai.",
+  icons: {
+    icon: [
+      { url: "/favicon-32.png?v=2", sizes: "32x32", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png?v=2",
+  },
 };
 
 export const viewport: Viewport = {

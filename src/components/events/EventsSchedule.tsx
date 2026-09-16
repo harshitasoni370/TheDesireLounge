@@ -1,9 +1,12 @@
 "use client";
 
 import { useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import eventsData from "@/data/events-schedule.json";
-import { WHATSAPP_NUMBER } from "@/lib/site";
+const MENU_CHECKOUT_URL = "https://app.thedesirelounge.com/checkout";
+const DEFAULT_COMPANY_ID = "0ffbe39e-abf8-4827-9107-1a04b39f3416";
+const DEFAULT_BRANCH_ID = "f4fb1d76-83a0-4965-86b5-63da28249dae";
 
 interface EventItem {
   category: string;
@@ -54,6 +57,13 @@ function statusRank(status: Status) {
 }
 
 export function EventsSchedule() {
+  const searchParams = useSearchParams();
+  const bookingContext = {
+    companyId: searchParams.get("companyId") || DEFAULT_COMPANY_ID,
+    branchId: searchParams.get("branchId") || DEFAULT_BRANCH_ID,
+    sessionId: searchParams.get("sessionId") || searchParams.get("tableSessionId") || "",
+    tableId: searchParams.get("tableId") || "",
+  };
   const today = useMemo(() => {
     const d = new Date();
     d.setHours(12, 0, 0, 0);
@@ -98,9 +108,37 @@ export function EventsSchedule() {
             {events.map(({ item, status }) => {
               const isPast = status === "past";
               const badgeLabel = status === "live" ? "Live" : isPast ? "Past" : "Upcoming";
-              const whatsappHref = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-                `Hi, I'd like to reserve a table for ${item.title}`
-              )}`;
+              const eventDetails = {
+                id: `${item.category}-${item.start}`,
+                name: item.title,
+                guest: item.guest || "",
+                dateStart: item.start,
+                dateEnd: item.end,
+                time: item.time,
+                venue: item.venue,
+                offer: item.offer || "",
+                description: item.description,
+              };
+              const eventParams = new URLSearchParams({
+                companyId: bookingContext.companyId,
+                branchId: bookingContext.branchId,
+                ...(bookingContext.sessionId ? { sessionId: bookingContext.sessionId } : {}),
+                ...(bookingContext.tableId ? { tableId: bookingContext.tableId } : {}),
+                categoryName: "Events",
+                category: "EVENT",
+                reservationCategory: "EVENT",
+                eventName: item.title,
+                bookingType: "Event",
+                sessionType: "Event",
+                reservationTitle: item.title,
+                dateStart: item.start,
+                uaeTime: item.time,
+                extraDetails: JSON.stringify(eventDetails),
+                step: "about-you",
+                hideSteps: "true",
+                hideCardIcon: "true",
+              });
+              const checkoutHref = `${MENU_CHECKOUT_URL}?${eventParams.toString()}`;
 
               return (
                 <article className={`event-card${isPast ? " event-card--past" : ""}`} key={item.title + item.start}>
@@ -154,8 +192,8 @@ export function EventsSchedule() {
                       {isPast ? (
                         <span className="event-card__btn event-card__btn--ended">Event Ended</span>
                       ) : (
-                        <a href={whatsappHref} className="event-card__btn event-card__btn--solid" target="_blank" rel="noopener noreferrer">
-                          Reserve Table
+                        <a href={checkoutHref} className="event-card__btn event-card__btn--solid">
+                          Book Event
                         </a>
                       )}
                     </div>
