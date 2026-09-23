@@ -326,7 +326,7 @@ export function SportsSchedule() {
         /* competition dropdown falls back to the competitions found in fixtures */
       });
 
-    requestJson(LIVE_SPORTS_API, { companyId, branchId, statusFilter: "upcoming" }, controller.signal)
+    requestJson(LIVE_SPORTS_API, { companyId, branchId, statusFilter: "" }, controller.signal)
       .then((payload) => {
         if (!active) return;
         const fixtures = extractList(payload)
@@ -362,7 +362,7 @@ export function SportsSchedule() {
   }, []);
 
   const enriched: EnrichedFixture[] = useMemo(() => {
-    const fixtures = (apiFixtures || LOCAL_FIXTURES).slice().sort((a, b) => {
+    const fixtures = (apiFixtures || []).slice().sort((a, b) => {
       const byStart = a.start.localeCompare(b.start);
       return byStart !== 0 ? byStart : a.sport.localeCompare(b.sport);
     });
