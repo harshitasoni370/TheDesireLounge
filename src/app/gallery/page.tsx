@@ -5,8 +5,7 @@ import { CtaBanner } from "@/components/shared/CtaBanner";
 
 export const metadata: Metadata = {
   title: "Gallery",
-  description:
-    "Gallery — photos and videos of food, drinks, shisha and lounge moments at DESIRE SHEESHA LOUNGE in Oud Metha, Dubai.",
+  description: "Photos and videos from the restaurant.",
   alternates: { canonical: "/gallery" },
 };
 
@@ -16,10 +15,10 @@ export default function GalleryPage() {
       <PageHero
         id="gallery-hero"
         bgImage="/images/index-hero-bg.webp"
-        bgAlt="Lounge table with shisha, mocktail and candlelight at Desire Sheesha Lounge"
+        bgAlt="Lounge table with shisha, mocktail and candlelight"
         title="Gallery"
         script="Every Corner Tells a Story"
-        copy="Step inside Desire Sheesha Lounge and explore photos and videos of our food, drinks, shisha and unforgettable moments in Oud Metha, Dubai."
+        copy="Explore photos and videos from the restaurant."
         ctas={[
           {
             label: "Explore Photos",

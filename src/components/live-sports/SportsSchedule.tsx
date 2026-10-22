@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import scheduleData from "@/data/sports-schedule.json";
+import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
+import { getDomainUrl, getTodayInTimezone } from "@/lib/site-config";
 
 interface Fixture {
   sport: "football" | "cricket";
@@ -75,29 +76,14 @@ function titleCaseMonth(slug: string) {
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50];
 
-const REMOTE_API_BASE = "https://restaurents-api.cylsys.com";
-/** Dev proxy path — see the `rewrites` block in next.config.ts. Avoids CORS on localhost. */
-const DEV_API_BASE = "/live-sports-api";
-
 const LIVE_SPORTS_API = "/api/Livesports/GetLiveSports";
 const LIVE_SPORTS_COMPETITIONS_API = "/api/Livesports/GetLiveSportsCompetitions";
 
-/**
- * Called from the effect (not at module scope) so `window` is available.
- * Order: NEXT_PUBLIC_LIVE_SPORTS_BASE -> dev proxy on localhost -> remote.
- */
 function getApiBase() {
   const configured = process.env.NEXT_PUBLIC_LIVE_SPORTS_BASE;
   if (configured) return configured.replace(/\/$/, "");
-  if (typeof window !== "undefined" && /^(localhost|127\.0\.0\.1|\[::1\])$/.test(window.location.hostname)) {
-    return DEV_API_BASE;
-  }
-  return REMOTE_API_BASE;
+  return "/restaurant-api";
 }
-const DEFAULT_COMPANY_ID = "0ffbe39e-abf8-4827-9107-1a04b39f3416";
-const DEFAULT_BRANCH_ID = "f4fb1d76-83a0-4965-86b5-63da28249dae";
-const MENU_CHECKOUT_URL = "https://app.thedesirelounge.com/checkout";
-
 /* ------------------------------------------------------------------ *
  * Response helpers
  * The API can answer with a bare array, or wrap it in data / result /
@@ -205,7 +191,11 @@ function normalizeCompetition(item: AnyRecord): string {
   return pick(item, "name", "competitionName", "title");
 }
 
-function buildBookingUrl(item: Fixture, context: { companyId: string; branchId: string; sessionId: string; tableId: string }) {
+function buildBookingUrl(
+  item: Fixture,
+  context: { companyId: string; branchId: string; sessionId: string; tableId: string },
+  appUrl: string,
+) {
   const details = {
     id: item.id || "",
     name: item.event,
@@ -244,7 +234,7 @@ function buildBookingUrl(item: Fixture, context: { companyId: string; branchId: 
     hideCurrentSession: "true",
     showCurrentTable: "false",
   });
-  return `${MENU_CHECKOUT_URL}?${params.toString()}`;
+  return `${appUrl}/checkout?${params.toString()}`;
 }
 
 function isAbort(error: unknown) {
@@ -253,8 +243,8 @@ function isAbort(error: unknown) {
 
 /**
  * POST first (current API contract); if that is rejected, retry the same
- * endpoint as GET. Never throws for network/CORS failures — it returns null so
- * the UI can fall back to the bundled schedule instead of crashing the page.
+ * endpoint as GET. It returns null for network/proxy failures so the UI can
+ * show the unavailable state and let the user retry.
  */
 async function requestJson(path: string, body: Record<string, string>, signal: AbortSignal): Promise<unknown> {
   const url = `${getApiBase()}${path}`;
@@ -290,76 +280,73 @@ async function requestJson(path: string, body: Record<string, string>, signal: A
   return null;
 }
 
-const LOCAL_FIXTURES = (scheduleData.fixtures as Fixture[]).map((item) => ({
-  ...item,
-  month: item.month.toLowerCase(),
-}));
-
 export function SportsSchedule() {
+  const site = useSiteConfig();
   const searchParams = useSearchParams();
-  const companyId = searchParams.get("companyId") || DEFAULT_COMPANY_ID;
-  const branchId = searchParams.get("branchId") || DEFAULT_BRANCH_ID;
+  const companyId = searchParams.get("companyId") || site.companyId;
+  const branchId = searchParams.get("branchId") || site.branchId;
   const sessionId = searchParams.get("sessionId") || searchParams.get("tableSessionId") || "";
   const tableId = searchParams.get("tableId") || "";
   const bookingContext = { companyId, branchId, sessionId, tableId };
+  const appUrl = getDomainUrl(site, "APP");
 
-  const [apiFixtures, setApiFixtures] = useState<Fixture[] | null>(null);
-  const [apiCompetitions, setApiCompetitions] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const requestKey = `${companyId}:${branchId}:${reloadKey}`;
+  const [apiState, setApiState] = useState<{
+    key: string;
+    fixtures: Fixture[] | null;
+    competitions: string[];
+    loadError: boolean;
+  }>({ key: "", fixtures: null, competitions: [], loadError: false });
+  const loading = apiState.key !== requestKey;
+  const apiFixtures = loading ? null : apiState.fixtures;
+  const apiCompetitions = useMemo(() => (loading ? [] : apiState.competitions), [apiState.competitions, loading]);
+  const loadError = !loading && apiState.loadError;
 
   useEffect(() => {
     const controller = new AbortController();
     let active = true;
-    setLoading(true);
-    setLoadError(false);
 
-    // Competitions are optional — a failure there must not blank the fixtures.
-    requestJson(LIVE_SPORTS_COMPETITIONS_API, { companyId, branchId }, controller.signal)
-      .then((payload) => {
-        if (!active) return;
-        const names = extractList(payload).map(normalizeCompetition).filter(Boolean);
-        setApiCompetitions(names);
-      })
-      .catch(() => {
-        /* competition dropdown falls back to the competitions found in fixtures */
-      });
-
-    requestJson(LIVE_SPORTS_API, { companyId, branchId, statusFilter: "" }, controller.signal)
-      .then((payload) => {
-        if (!active) return;
-        const fixtures = extractList(payload)
-          .map(normalizeLiveFixture)
-          .filter((item): item is Fixture => item !== null);
-        // payload === null means the request could not be made at all (CORS/offline).
-        setLoadError(payload === null);
-        // An empty API list should not wipe the page — keep the bundled list.
-        setApiFixtures(fixtures.length ? fixtures : null);
-        setLoading(false);
-      })
+    const competitionsRequest = requestJson(LIVE_SPORTS_COMPETITIONS_API, { companyId, branchId }, controller.signal)
+      .then((payload) => extractList(payload).map(normalizeCompetition).filter(Boolean))
       .catch((error: unknown) => {
-        if (!active) return;
-        if (isAbort(error)) return;
-        console.error("Live sports API unavailable; using bundled fixtures", error);
-        setApiFixtures(null);
-        setLoadError(true);
-        setLoading(false);
+        if (!isAbort(error)) console.warn("Live sports competitions could not be loaded.", error);
+        return [];
       });
+    const fixturesRequest = requestJson(LIVE_SPORTS_API, { companyId, branchId, statusFilter: "" }, controller.signal)
+      .then((payload) => ({
+        fixtures: extractList(payload)
+          .map(normalizeLiveFixture)
+          .filter((item): item is Fixture => item !== null),
+        loadError: payload === null,
+      }))
+      .catch((error: unknown) => {
+        if (isAbort(error)) return null;
+        console.error("Live sports API unavailable.", error);
+        return { fixtures: [], loadError: true };
+      });
+
+    Promise.all([competitionsRequest, fixturesRequest]).then(([competitions, result]) => {
+      if (!active || !result) return;
+      setApiState({
+        key: requestKey,
+        fixtures: result.fixtures.length ? result.fixtures : null,
+        competitions,
+        loadError: result.loadError,
+      });
+    });
 
     return () => {
       active = false;
       controller.abort();
     };
-  }, [companyId, branchId, reloadKey]);
+  }, [companyId, branchId, reloadKey, requestKey]);
 
   const retry = useCallback(() => setReloadKey((n) => n + 1), []);
 
   const today = useMemo(() => {
-    const d = new Date();
-    d.setHours(12, 0, 0, 0);
-    return d;
-  }, []);
+    return getTodayInTimezone(site.timezone);
+  }, [site.timezone]);
 
   const enriched: EnrichedFixture[] = useMemo(() => {
     const fixtures = (apiFixtures || []).slice().sort((a, b) => {
@@ -391,22 +378,15 @@ export function SportsSchedule() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
 
-  // If the selected competition/month is not in the freshly loaded data, reset it
-  // instead of showing an empty grid.
-  useEffect(() => {
-    if (competition !== "all" && !competitions.includes(competition)) setCompetition("all");
-  }, [competitions, competition]);
-
-  useEffect(() => {
-    if (month !== "all" && !monthsPresent.includes(month)) setMonth("all");
-  }, [monthsPresent, month]);
+  const activeCompetition = competition === "all" || competitions.includes(competition) ? competition : "all";
+  const activeMonth = month === "all" || monthsPresent.includes(month) ? month : "all";
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return enriched.filter((item) => {
       if (sport !== "all" && item.sport !== sport) return false;
-      if (month !== "all" && item.month.toLowerCase() !== month) return false;
-      if (competition !== "all" && item.competition !== competition) return false;
+      if (activeMonth !== "all" && item.month.toLowerCase() !== activeMonth) return false;
+      if (activeCompetition !== "all" && item.competition !== activeCompetition) return false;
       if (status === "active" && item.status === "past") return false;
       if (status === "live" && item.status !== "live") return false;
       if (status === "upcoming" && item.status !== "upcoming") return false;
@@ -416,7 +396,7 @@ export function SportsSchedule() {
       }
       return true;
     });
-  }, [enriched, sport, month, competition, status, query]);
+  }, [enriched, sport, activeMonth, activeCompetition, status, query]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, totalPages);
@@ -424,7 +404,8 @@ export function SportsSchedule() {
   const endIdx = Math.min(startIdx + pageSize, filtered.length);
   const pageItems = filtered.slice(startIdx, endIdx);
 
-  const filtersActive = sport !== "all" || month !== "all" || status !== "active" || competition !== "all" || Boolean(query);
+  const filtersActive =
+    sport !== "all" || activeMonth !== "all" || status !== "active" || activeCompetition !== "all" || Boolean(query);
 
   function resetFilters() {
     setSport("all");
@@ -476,7 +457,7 @@ export function SportsSchedule() {
           </p>
           {loadError && (
             <p className="sports-schedule__count" role="status">
-              Live feed unavailable right now — showing our latest saved schedule.{" "}
+                Live feed unavailable right now.{" "}
               <button type="button" className="sports-toolbar__reset" onClick={retry}>
                 Retry
               </button>
@@ -511,7 +492,7 @@ export function SportsSchedule() {
               <span className="sports-filters__label">Competition</span>
               <select
                 className="sports-select__control"
-                value={competition}
+                value={activeCompetition}
                 onChange={(e) => {
                   setCompetition(e.target.value);
                   setPage(1);
@@ -593,14 +574,14 @@ export function SportsSchedule() {
           <div className="sports-filters__group">
             <p className="sports-filters__label">Month</p>
             <div className="gallery-filters" role="tablist">
-              <button type="button" className={`gallery-filters__btn${month === "all" ? " is-active" : ""}`} onClick={() => { setMonth("all"); setPage(1); }}>
+              <button type="button" className={`gallery-filters__btn${activeMonth === "all" ? " is-active" : ""}`} onClick={() => { setMonth("all"); setPage(1); }}>
                 All
               </button>
               {monthsPresent.map((m) => (
                 <button
                   key={m}
                   type="button"
-                  className={`gallery-filters__btn${month === m ? " is-active" : ""}`}
+                  className={`gallery-filters__btn${activeMonth === m ? " is-active" : ""}`}
                   onClick={() => {
                     setMonth(m);
                     setPage(1);
@@ -659,9 +640,11 @@ export function SportsSchedule() {
                   <dd>{item.channel}</dd>
                 </div>
               </dl>
-              <a className="sports-card__book" href={buildBookingUrl(item, bookingContext)}>
-                Book a Table
-              </a>
+              {appUrl && (
+                <a className="sports-card__book" href={buildBookingUrl(item, bookingContext, appUrl)}>
+                  Book a Table
+                </a>
+              )}
             </article>
           ))}
         </div>

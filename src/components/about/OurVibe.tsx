@@ -49,7 +49,7 @@ export function OurVibe() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=900&q=80"
-              alt="Bar and lounge counter with ambient lighting at Desire Sheesha Lounge"
+              alt="Bar and lounge counter with ambient lighting"
               width={720}
               height={540}
               loading="lazy"
@@ -61,7 +61,7 @@ export function OurVibe() {
           </figure>
           <figure className="about-vibe__side">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="https://images.unsplash.com/photo-1572116469696-31de0f17cc34?w=700&q=80" alt="Neon lounge ambience inside Desire Sheesha Lounge" width={480} height={300} loading="lazy" />
+            <img src="https://images.unsplash.com/photo-1572116469696-31de0f17cc34?w=700&q=80" alt="Neon lounge ambience" width={480} height={300} loading="lazy" />
           </figure>
         </div>
 
@@ -71,7 +71,7 @@ export function OurVibe() {
             Our Vibe
           </h2>
           <p className="home-copy">
-            Soft lights. Smooth music. Warm conversations. Desire Sheesha Lounge is designed to feel like your favourite spot in the city —
+            Soft lights. Smooth music. Warm conversations.             The lounge is designed to feel like your favourite spot in the city —
             familiar, lively and always welcoming.
           </p>
 

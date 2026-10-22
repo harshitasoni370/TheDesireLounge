@@ -5,21 +5,14 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { MobileContactBar } from "@/components/layout/MobileContactBar";
 import { WhatsAppFloat } from "@/components/layout/WhatsAppFloat";
 import { Toast } from "@/components/common/Toast";
+import { SiteConfigProvider } from "@/components/providers/SiteConfigProvider";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://thedesirelounge.com"),
   title: {
-    default: "DESIRE SHEESHA LOUNGE | Eat. Chill. Play. 24/7 — Oud Metha, Dubai",
-    template: "%s | DESIRE SHEESHA LOUNGE",
+    default: "Restaurant",
+    template: "%s | Restaurant",
   },
-  description:
-    "DESIRE SHEESHA LOUNGE — Eat. Chill. Play. 24/7. Premium lounge, multi-cuisine food, live sports & gaming zone in Oud Metha, Dubai.",
-  icons: {
-    icon: [
-      { url: "/favicon-32.png?v=2", sizes: "32x32", type: "image/png" },
-    ],
-    apple: "/apple-touch-icon.png?v=2",
-  },
+  description: "Restaurant website",
 };
 
 export const viewport: Viewport = {
@@ -41,12 +34,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <a className="skip-link" href="#main">
           Skip to content
         </a>
-        <SiteHeader />
-        {children}
-        <SiteFooter />
-        <MobileContactBar />
-        <WhatsAppFloat />
-        <Toast />
+        <SiteConfigProvider>
+          <SiteHeader />
+          {children}
+          <SiteFooter />
+          <MobileContactBar />
+          <WhatsAppFloat />
+          <Toast />
+        </SiteConfigProvider>
       </body>
     </html>
   );

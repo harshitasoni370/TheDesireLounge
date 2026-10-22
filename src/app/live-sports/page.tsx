@@ -8,7 +8,7 @@ import { CtaBanner } from "@/components/shared/CtaBanner";
 export const metadata: Metadata = {
   title: "Live Sports",
   description:
-    "Live Sports at DESIRE SHEESHA LOUNGE — football and cricket fixtures screened on big screens in Oud Metha, Dubai.",
+    "Browse upcoming live sports fixtures and reserve a table.",
   alternates: { canonical: "/live-sports" },
 };
 
@@ -65,7 +65,7 @@ function LiveSportsContent() {
         bgAlt="Football stadium lights and crowd atmosphere for live sports night"
         title="Live Sports"
         script="Every Match. Big Screens. Better Vibes."
-        copy="Football and cricket fixtures screened live at Desire Sheesha Lounge — grab a table, order your favourites, and catch the action in Oud Metha."
+        copy="Browse upcoming football and cricket fixtures, then reserve a table to watch the action."
         ctas={[
           {
             label: "View Fixtures",

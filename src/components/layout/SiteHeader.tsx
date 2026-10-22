@@ -5,8 +5,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { NAV_LINKS, NAV_LINKS_TAIL, GAMING_LINKS } from "@/lib/site";
+import { getDomainUrl } from "@/lib/site-config";
+import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
 
 export function SiteHeader() {
+  const site = useSiteConfig();
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
@@ -41,19 +44,30 @@ export function SiteHeader() {
   };
 
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
+  const appUrl = getDomainUrl(site, "APP");
+  const loungeUrl = getDomainUrl(site, "DL");
 
   return (
     <header className={`site-header${scrolled ? " is-scrolled" : ""}`} id="site-header">
       <div className="site-header__inner">
         <Link href="/" className="logo site-header__logo">
-          <Image src="https://restaurents-api.cylsys.com/Assets/theDesireLounge/Image/Logo/logo.webp" alt="DESIRE SHEESHA LOUNGE" className="logo__mark" width={48} height={48} />
+          <Image src={site.logoUrl} alt={site.siteName} className="logo__mark" width={48} height={48} unoptimized />
           <span className="logo__copy">
-            <span className="logo__text">DESIRE</span>
-            <span className="logo__tag">SHEESHA LOUNGE</span>
+            <span className="logo__text">{site.siteName}</span>
           </span>
         </Link>
 
         <nav className={`site-nav${navOpen ? " is-open" : ""}`} id="site-nav" aria-label="Primary" ref={navRef}>
+          {appUrl && (
+            <a href={`${appUrl}/categories.html`} className="site-nav__link" onClick={closeMobileNav}>
+              Menu
+            </a>
+          )}
+          {loungeUrl && (
+            <a href={loungeUrl} className="site-nav__link" onClick={closeMobileNav}>
+              Lounge
+            </a>
+          )}
           {NAV_LINKS.map((item) =>
             item.external ? (
               <a key={item.label} href={item.href} className="site-nav__link" onClick={closeMobileNav}>

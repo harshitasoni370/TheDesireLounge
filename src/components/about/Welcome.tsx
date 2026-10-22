@@ -1,3 +1,7 @@
+"use client";
+
+import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
+
 const STATS = [
   {
     value: "2 Lakh+",
@@ -44,6 +48,8 @@ const STATS = [
 ];
 
 export function Welcome() {
+  const site = useSiteConfig();
+
   return (
     <section className="about-welcome" id="welcome" aria-labelledby="welcome-heading">
       <div className="home-container about-welcome__grid">
@@ -51,7 +57,7 @@ export function Welcome() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=900&q=80"
-            alt="Night-time exterior entrance of Desire Sheesha Lounge with warm lighting"
+            alt="Night-time exterior entrance of the lounge with warm lighting"
             width={720}
             height={960}
             loading="lazy"
@@ -61,17 +67,11 @@ export function Welcome() {
         <div className="about-welcome__content">
           <p className="about-welcome__eyebrow text-script">Welcome to —</p>
           <h2 id="welcome-heading" className="home-heading home-heading--split">
-            DESIRE
-            <br />
-            <span className="text-gold">SHEESHA LOUNGE</span>
+            <span className="text-gold">{site.siteName}</span>
           </h2>
+          {site.address && <p className="home-copy">{site.siteName} is located at {site.address}.</p>}
           <p className="home-copy">
-            We are a 24-hour destination in the heart of Oud Metha, Dubai — where shisha, cuisine, conversations and live music come together
-            under one roof.
-          </p>
-          <p className="home-copy">
-            Whether you&apos;re catching up with friends, celebrating a special moment, or simply looking for a place that feels alive at any
-            hour — Desire Sheesha Lounge is where Dubai comes to unwind.
+            Visit {site.siteName} to enjoy a welcoming place to meet, celebrate and unwind.
           </p>
 
           <ul className="about-stats" aria-label="Venue highlights">

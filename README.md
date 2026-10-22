@@ -15,6 +15,37 @@ npm run build    # static production export in out/
 For IIS deployment, upload the complete `out/` folder. It contains the generated
 pages, `images/` assets, and `web.config` from `public/`.
 
+## Domain-based website configuration
+
+The static export calls
+<!-- `https://fumesandflavoursapi.cylsysuat.com/api/WebsiteUrl/by-domain`
+ -->
+ `https://restaurents-api.cylsys.com/api/WebsiteUrl/by-domain`
+ directly
+and sends the current hostname as the `domain` query parameter. To use another
+configuration endpoint, set `NEXT_PUBLIC_WEBSITE_CONFIG_API_URL` to its full
+URL before building.
+Company/branch IDs, venue name, logo, contact details, address, and APP/DL links
+are populated from that response; a missing or invalid configuration is shown
+instead of silently using another venue's details.
+The tenant asset folder is inferred from the configured logo path and is reused
+for API-provided event and game images.
+
+Set these environment variables before starting local development to configure
+the API targets:
+
+```bash
+NEXT_PUBLIC_RESTAURANT_API_BASE_URL=https://restaurents-api.cylsys.com
+NEXT_PUBLIC_EVENTS_API_BASE_URL=https://fumesandflavoursapi.cylsysuat.com
+# NEXT_PUBLIC_WEBSITE_CONFIG_API_URL=https://fumesandflavoursapi.cylsysuat.com/api/WebsiteUrl/by-domain
+NEXT_PUBLIC_WEBSITE_CONFIG_API_URL=https://restaurents-api.cylsys.com/api/WebsiteUrl/by-domain
+```
+
+For local previews, `NEXT_PUBLIC_WEBSITE_DOMAIN` can override `localhost` with a
+domain registered in the website configuration service. The configuration
+service allows the website origin through CORS, so the static website can call
+the API directly.
+
 ## Structure
 
 ```
@@ -35,16 +66,16 @@ src/
     shared/             PageHero, HighlightsStrip, CtaBanner — reused across About/
                         Gallery/Live Sports/Events (same layout, different content)
     home/               HomeHero (slider), MenuPreview, Hubs, GalleryTeaser, Reviews,
-                        ReserveForm (WhatsApp submission)
+                        ReserveForm (API-backed booking)
     about/              Welcome, WhatMakesUsSpecial, OurVibe, AboutClosing
     gallery/            GalleryGrid — tabs, category filters, load more, lightbox
     live-sports/        SportsSchedule — search, sport/status/month filters, pagination
-    events/             EventsSchedule — live/upcoming/past cards with WhatsApp reserve CTA
+    events/             EventsSchedule — API-fed live/upcoming/past events
 
-  data/                 menu.json, gallery.json, sports-schedule.json, events-schedule.json
-                        (copied from the original assets/data, imported directly — no client fetch)
+  data/                 Bundled gallery and legacy page data
 
-  lib/                  site.ts (shared constants: phone, WhatsApp, address, nav links),
+  lib/                  site.ts (API endpoints and internal navigation),
+                        site-config.ts (domain response types and helpers),
                         toast.ts (tiny pub/sub used by the Toast component)
 ```
 
@@ -58,9 +89,10 @@ src/
   Vibes, Roboto, Playfair Display) rather than `next/font`, since the sandboxed build
   environment here can't reach `fonts.googleapis.com` at build time — functionally identical
   once deployed with normal internet access.
-- **Data-driven pages**: Gallery, Live Sports and Events all read from the original JSON data
-  files (`src/data/*.json`) instead of hardcoded markup, matching how the original site's
-  vanilla-JS page controllers worked — just re-implemented as React components.
+- **Tenant-fed pages**: the site profile, events, games, sports, reservation requests, and
+  booking links use API data and the IDs resolved for the active domain. Gallery assets and
+  editorial landing-page content remain bundled because the website configuration response
+  does not contain those content collections.
 - **Animations**: the original used GSAP (loaded from a CDN) for the hero fade-in. That's
   reproduced with the native Web Animations API in `HeroAnimate.tsx` — no extra dependency,
   same visual effect, and it fails safe (content is never left invisible) for

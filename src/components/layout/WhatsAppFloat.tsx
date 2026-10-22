@@ -1,10 +1,15 @@
-import { WHATSAPP_NUMBER } from "@/lib/site";
+"use client";
+
+import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
+import { getWhatsAppHref } from "@/lib/site-config";
 
 export function WhatsAppFloat() {
+  const whatsappHref = getWhatsAppHref(useSiteConfig());
+
   return (
-    <a
+    whatsappHref && <a
       className="home-whatsapp home-whatsapp--desktop"
-      href={`https://wa.me/${WHATSAPP_NUMBER}`}
+      href={whatsappHref}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Chat on WhatsApp — Book instantly"

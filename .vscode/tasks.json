@@ -1,0 +1,21 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run Next.js local website",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"dev"
+			],
+			"options": {
+				"env": {
+					"NEXT_PUBLIC_WEBSITE_DOMAIN": "thedesirelounge.cylsysuat.com"
+				}
+			},
+			"isBackground": true,
+			"problemMatcher": []
+		}
+	]
+}

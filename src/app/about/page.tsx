@@ -10,7 +10,7 @@ import { CtaBanner } from "@/components/shared/CtaBanner";
 export const metadata: Metadata = {
   title: "About Us",
   description:
-    "About DESIRE SHEESHA LOUNGE — the story behind Dubai's 24-hour destination for premium shisha, exquisite cuisine, signature mocktails and unforgettable vibes in Oud Metha.",
+    "Learn more about this restaurant and its offerings.",
   alternates: { canonical: "/about" },
 };
 
@@ -64,10 +64,10 @@ export default function AboutPage() {
         id="about-hero"
         className="about-hero"
         bgImage="/images/index-hero-bg.webp"
-        bgAlt="Warm pendant lights over a premium lounge interior at Desire Sheesha Lounge"
+        bgAlt="Warm pendant lights over a premium lounge interior"
         title="About Us"
-        script="The Story Behind Desire Sheesha Lounge"
-        copy="At Desire Sheesha Lounge, we craft experiences — not just meals. From the aroma of premium shisha to the taste of our signature dishes, every detail is designed to make you stay longer and come back often."
+        script="Our Story"
+        copy="Discover the people, food and experiences that make this restaurant special."
         ctas={[
           {
             label: "Our Story",
@@ -103,7 +103,7 @@ export default function AboutPage() {
           </svg>
         }
         title="Come Experience It Yourself"
-        text="Eat. Chill. Play. — open 24/7 in Oud Metha, Dubai."
+        text="We look forward to welcoming you."
         script="Your table is waiting."
         ctaLabel="Reserve a Table"
         ctaHref="/#reserve"

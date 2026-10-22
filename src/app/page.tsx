@@ -8,7 +8,7 @@ import { Reviews } from "@/components/home/Reviews";
 import { ReserveForm } from "@/components/home/ReserveForm";
 
 export const metadata: Metadata = {
-  title: "DESIRE SHEESHA LOUNGE | Eat. Chill. Play. 24/7 — Oud Metha, Dubai",
+  title: "Home",
   alternates: { canonical: "/" },
 };
 

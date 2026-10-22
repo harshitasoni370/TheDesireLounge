@@ -1,4 +1,7 @@
-import { MENU_URL } from "@/lib/site";
+"use client";
+
+import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
+import { getDomainUrl } from "@/lib/site-config";
 
 const MENU_CARDS = [
   { img: "https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=600&q=80", alt: "Indian favourites platter", label: "Indian Favourites" },
@@ -10,6 +13,8 @@ const MENU_CARDS = [
 ];
 
 export function MenuPreview() {
+  const appUrl = getDomainUrl(useSiteConfig(), "APP");
+
   return (
     <section className="home-menu" id="menu" aria-labelledby="menu-heading">
       <div className="home-container">
@@ -22,20 +27,18 @@ export function MenuPreview() {
             </h2>
             <p className="home-copy">From flavorful Indian favourites to refreshing mocktails, we have something for every mood and every moment.</p>
           </div>
-          <a href={MENU_URL} className="btn btn-outline home-menu__all">
-            View Full Menu
-          </a>
+          {appUrl && <a href={`${appUrl}/categories.html`} className="btn btn-outline home-menu__all">View Full Menu</a>}
         </div>
 
-        <div className="home-menu__grid">
+        {appUrl && <div className="home-menu__grid">
           {MENU_CARDS.map((card) => (
-            <a href={MENU_URL} className="home-menu__card" key={card.label}>
+            <a href={`${appUrl}/categories.html`} className="home-menu__card" key={card.label}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={card.img} alt={card.alt} loading="lazy" width={280} height={200} />
               <span>{card.label}</span>
             </a>
           ))}
-        </div>
+        </div>}
       </div>
     </section>
   );

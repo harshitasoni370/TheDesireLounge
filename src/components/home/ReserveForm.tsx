@@ -1,14 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
-  PHONE_NUMBER_DISPLAY,
-  PHONE_NUMBER_HREF,
   RESERVATION_API_URL,
   RESERVATION_CATEGORIES_API_URL,
-  RESERVATION_BRANCH_ID,
-  RESERVATION_COMPANY_ID,
 } from "@/lib/site";
+import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
+import { getPhoneDisplay, getPhoneHref, getTimeZoneOffset } from "@/lib/site-config";
 import { showToast } from "@/lib/toast";
 
 type ReservationPayload = {
@@ -39,7 +38,7 @@ function normalizeMobile(value: string) {
   return value.replace(/\s+/g, "").replace(/[^\d+]/g, "").replace(/^\+/, "");
 }
 
-function toReservationDateTime(date: string, time: string) {
+function toReservationDateTime(date: string, time: string, timeZone: string) {
   if (!date || !time) {
     return "";
   }
@@ -52,7 +51,9 @@ function toReservationDateTime(date: string, time: string) {
   }
 
   const format = (value: number) => String(value).padStart(2, "0");
-  return `${year}-${format(month)}-${format(day)}T${format(hours)}:${format(minutes)}:00+04:00`;
+  const offsetDate = new Date(Date.UTC(year, month - 1, day, hours, minutes));
+  const offset = getTimeZoneOffset(offsetDate, timeZone);
+  return `${year}-${format(month)}-${format(day)}T${format(hours)}:${format(minutes)}:00${offset}`;
 }
 
 function validateReservation(data: ReservationPayload) {
@@ -98,40 +99,43 @@ function validateReservation(data: ReservationPayload) {
 }
 
 export function ReserveForm() {
+  const site = useSiteConfig();
+  const searchParams = useSearchParams();
   const formRef = useRef<HTMLFormElement>(null);
   const [note, setNote] = useState("");
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [reservationContext, setReservationContext] = useState({
-    companyId: RESERVATION_COMPANY_ID,
-    branchId: RESERVATION_BRANCH_ID,
-  });
-  const [reservationCategory, setReservationCategory] = useState("TABLE_RESERVATION");
-  const [categoryLabel, setCategoryLabel] = useState(CATEGORY_LABELS.TABLE_RESERVATION);
+  const reservationCategory = searchParams.get("reservationCategory") || "TABLE_RESERVATION";
+  const reservationCompanyId = searchParams.get("companyId") || site.companyId;
+  const reservationBranchId = searchParams.get("branchId") || site.branchId;
+  const reservationContext = useMemo(
+    () => ({ companyId: reservationCompanyId, branchId: reservationBranchId }),
+    [reservationBranchId, reservationCompanyId],
+  );
+  const categoryLookupKey = `${reservationContext.companyId}:${reservationContext.branchId}:${reservationCategory}`;
+  const [categoryLookup, setCategoryLookup] = useState<{ key: string; label: string } | null>(null);
+  const categoryLabel =
+    (categoryLookup?.key === categoryLookupKey ? categoryLookup.label : "") ||
+    CATEGORY_LABELS[reservationCategory] ||
+    reservationCategory.replaceAll("_", " ");
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const category = params.get("reservationCategory") || "TABLE_RESERVATION";
-    const context = {
-      companyId: params.get("companyId") || RESERVATION_COMPANY_ID,
-      branchId: params.get("branchId") || RESERVATION_BRANCH_ID,
-    };
-    setReservationCategory(category);
-    setCategoryLabel(CATEGORY_LABELS[category] || category.replaceAll("_", " "));
-    setReservationContext(context);
-
-    const categoryParams = new URLSearchParams(context);
-    fetch(`${RESERVATION_CATEGORIES_API_URL}?${categoryParams}`)
+    const controller = new AbortController();
+    const categoryParams = new URLSearchParams(reservationContext);
+    fetch(`${RESERVATION_CATEGORIES_API_URL}?${categoryParams}`, { signal: controller.signal })
       .then((response) => (response.ok ? response.json() : Promise.reject(new Error(`Category request failed: ${response.status}`))))
       .then((payload) => {
         const categories = Array.isArray(payload) ? payload : payload?.data || payload?.categories || [];
-        const selected = categories.find((item: { categoryCode?: string; categoryName?: string }) => item.categoryCode === category);
-        if (selected?.categoryName) setCategoryLabel(selected.categoryName);
+        const selected = categories.find((item: { categoryCode?: string; categoryName?: string }) => item.categoryCode === reservationCategory);
+        if (selected?.categoryName) setCategoryLookup({ key: categoryLookupKey, label: selected.categoryName });
       })
-      .catch(() => {
-        // Keep the category label fallback when the lookup is unavailable.
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        console.warn("Reservation category lookup unavailable; using the category label fallback.", error);
       });
-  }, []);
+
+    return () => controller.abort();
+  }, [categoryLookupKey, reservationCategory, reservationContext]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -153,15 +157,25 @@ export function ReserveForm() {
     const reservationDate = String(data.get("date") || "").trim();
     const reservationTime = String(data.get("time") || "").trim();
     const specialRequest = String(data.get("notes") || "").trim();
+    let reservationDateTime: string;
+
+    try {
+      reservationDateTime = toReservationDateTime(reservationDate, reservationTime, site.timezone);
+    } catch (error: unknown) {
+      console.error("Unable to determine the venue's reservation time zone.", error);
+      setStatus("error");
+      setNote("The venue time zone is invalid. Please contact the restaurant.");
+      return;
+    }
 
     const payload: ReservationPayload = {
-      companyId: RESERVATION_COMPANY_ID,
-      branchId: RESERVATION_BRANCH_ID,
+      companyId: reservationContext.companyId,
+      branchId: reservationContext.branchId,
       guestName,
       mobile,
       dateOfBirth,
       guestCount,
-      reservationDateTime: toReservationDateTime(reservationDate, reservationTime),
+      reservationDateTime,
       specialRequest,
       reservationCategory,
     };
@@ -184,7 +198,7 @@ export function ReserveForm() {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify({ ...payload, ...reservationContext }),
+        body: JSON.stringify(payload),
       });
 
       const result = await response.json().catch(() => null);
@@ -280,16 +294,18 @@ export function ReserveForm() {
           </ul>
 
           <div className="home-reserve__intro-meta">
-            <a href={PHONE_NUMBER_HREF} className="home-reserve__meta-link">
+            {getPhoneHref(site) && <a href={getPhoneHref(site)} className="home-reserve__meta-link">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
                 <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.81.36 1.6.68 2.34a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.74.32 1.53.55 2.34.68A2 2 0 0 1 22 16.92z" />
               </svg>
-              <span>{PHONE_NUMBER_DISPLAY}</span>
-            </a>
-            <span className="home-reserve__meta-sep" aria-hidden="true">
-              ·
-            </span>
-            <span className="home-reserve__meta-loc">Oud Metha, Dubai</span>
+              <span>{getPhoneDisplay(site)}</span>
+            </a>}
+            {site.address && (
+              <>
+                <span className="home-reserve__meta-sep" aria-hidden="true">·</span>
+                <span className="home-reserve__meta-loc">{site.address}</span>
+              </>
+            )}
           </div>
         </div>
 

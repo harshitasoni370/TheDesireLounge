@@ -2,20 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import Image from "next/image";
-import eventsData from "@/data/events-schedule.json";
-const MENU_CHECKOUT_URL = "https://app.thedesirelounge.com/checkout";
-const API_BASE = "https://fumesandflavoursapi.cylsysuat.com/api";
-const DEFAULT_COMPANY_ID = "0ffbe39e-abf8-4827-9107-1a04b39f3416";
-const DEFAULT_BRANCH_ID = "f4fb1d76-83a0-4965-86b5-63da28249dae";
+import { EVENTS_API_PROXY_BASE_URL } from "@/lib/site";
+import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
+import { getAssetUrl, getDomainUrl, getTodayInTimezone } from "@/lib/site-config";
 
-const LOCAL_EVENT_IMAGES: Record<string, { file: string; w: number; h: number }> = {
-  "janan band live": { file: "janan-band-live.webp", w: 682, h: 1024 },
-  "janaam band live": { file: "janan-band-live.webp", w: 682, h: 1024 },
-  "janaan band live": { file: "janan-band-live.webp", w: 682, h: 1024 },
-  "sufi night": { file: "sufi-night.webp", w: 1024, h: 1024 },
-  "live music night": { file: "live-music-night.webp", w: 1024, h: 1536 },
-};
+const API_BASE = `${EVENTS_API_PROXY_BASE_URL}/api`;
 
 interface EventItem {
   category: string;
@@ -106,50 +97,32 @@ function slugify(text: string) {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
 
-function resolveEventImage(eventName: string, apiImagePath: string) {
-  const key = eventName.trim().toLowerCase();
-  const local = LOCAL_EVENT_IMAGES[key];
-  if (local) {
-    return {
-      src: `/images/events/${local.file}`,
-      width: local.w,
-      height: local.h,
-      isLocal: true,
-    };
-  }
+function resolveEventImage(apiImagePath: string, site: ReturnType<typeof useSiteConfig>) {
   if (apiImagePath && apiImagePath.trim()) {
-    const prefix = apiImagePath.startsWith("http")
-      ? apiImagePath
-      : `${API_BASE.replace(/\/api$/, "")}/${apiImagePath.replace(/^\/+/, "")}`;
-    return { src: prefix, width: 1024, height: 1024, isLocal: false };
+    return { src: getAssetUrl(apiImagePath, site), width: 1024, height: 1024 };
   }
-  return {
-    src: `/images/events/sufi-night.webp`,
-    width: 1024,
-    height: 1024,
-    isLocal: true,
-  };
+  return { src: "", width: 1024, height: 1024 };
 }
 
-function mapApiToEventItem(master: ApiEventMaster, map: ApiEventMap): EventItem {
+function mapApiToEventItem(master: ApiEventMaster, map: ApiEventMap, site: ReturnType<typeof useSiteConfig>): EventItem {
   const start = dateOnlyFromDatetime(map.dtmStartDatetime);
   const end = dateOnlyFromDatetime(map.dtmEndDatetime) || start;
   const startDate = parseLocalDate(start);
   const month = startDate.toLocaleString("en-GB", { month: "long" });
-  const image = resolveEventImage(master.eventName, map.strImagePath);
+  const image = resolveEventImage(map.strImagePath, site);
   return {
     category: slugify(master.strEventType || master.eventName),
     month,
     start,
     end,
     title: master.eventName,
-    description: master.strDescription || "",
+    description: (master.strDescription || "").replace(/Fumes\s*&\s*Flavours/gi, site.siteName),
     guest: map.strArtistName || undefined,
     time: formatTimeFromDatetime(map.dtmStartDatetime),
-    venue: map.strVenue || "Main Lounge",
+    venue: map.strVenue || site.branchName,
     offer: map.strEntry || undefined,
     image: image.src,
-    imageAlt: `${master.eventName} event at DESIRE SHEESHA LOUNGE`,
+    imageAlt: `${master.eventName} event at ${site.siteName}`,
     imageWidth: image.width,
     imageHeight: image.height,
     features: [],
@@ -157,20 +130,25 @@ function mapApiToEventItem(master: ApiEventMaster, map: ApiEventMap): EventItem 
 }
 
 export function EventsSchedule() {
+  const site = useSiteConfig();
   const searchParams = useSearchParams();
   const bookingContext = {
-    companyId: searchParams.get("companyId") || DEFAULT_COMPANY_ID,
-    branchId: searchParams.get("branchId") || DEFAULT_BRANCH_ID,
+    companyId: searchParams.get("companyId") || site.companyId,
+    branchId: searchParams.get("branchId") || site.branchId,
     sessionId: searchParams.get("sessionId") || searchParams.get("tableSessionId") || "",
     tableId: searchParams.get("tableId") || "",
   };
-  const [items, setItems] = useState<EventItem[]>(eventsData.events as EventItem[]);
-  const [status, setStatus] = useState<"loading" | "ready" | "fallback">("loading");
-  const today = useMemo<Date>(() => {
-    const d = new Date();
-    d.setHours(12, 0, 0, 0);
-    return d;
-  }, []);
+  const requestKey = `${bookingContext.companyId}:${bookingContext.branchId}`;
+  const [eventResponse, setEventResponse] = useState<{
+    key: string;
+    items: EventItem[];
+    error: Error | null;
+  }>({ key: "", items: [], error: null });
+  const loading = eventResponse.key !== requestKey;
+  const items = useMemo(() => (loading ? [] : eventResponse.items), [eventResponse.items, loading]);
+  const status = loading ? "loading" : eventResponse.error ? "fallback" : "ready";
+  const today = useMemo(() => getTodayInTimezone(site.timezone), [site.timezone]);
+  const appUrl = getDomainUrl(site, "APP");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -183,50 +161,39 @@ export function EventsSchedule() {
       signal: controller.signal,
     })
       .then((response) => {
-        if (!response.ok) throw new Error(`Events API returned ${response.status}`);
-        return response.json();
+        if (!response.ok) throw new Error(`Events API returned ${response.status}.`);
+        return response.json() as Promise<unknown>;
       })
-      .then((payload: unknown) => {
-        let records: ApiEventMaster[] = [];
+      .then((payload) => {
+        let records: ApiEventMaster[];
         if (Array.isArray(payload)) {
           records = payload as ApiEventMaster[];
-        } else if (payload && typeof payload === "object") {
-          const obj = payload as Record<string, unknown>;
-          if (Array.isArray(obj.data)) records = obj.data as ApiEventMaster[];
-          else if (Array.isArray(obj.items)) records = obj.items as ApiEventMaster[];
+        } else if (typeof payload === "object" && payload !== null && "data" in payload && Array.isArray(payload.data)) {
+          records = payload.data as ApiEventMaster[];
+        } else if (typeof payload === "object" && payload !== null && "items" in payload && Array.isArray(payload.items)) {
+          records = payload.items as ApiEventMaster[];
+        } else {
+          throw new Error("Events API returned an unsupported response format.");
         }
+
         const mapped: EventItem[] = [];
         for (const master of records) {
           if (!master.masterIsActive) continue;
-          const schedules = (master.events || []).filter((m) => m.mapIsActive);
-          if (schedules.length === 0) {
-            const fallbackMap: ApiEventMap = {
-              uidEventMapId: "",
-              dtmStartDatetime: "2026-08-14 22:00:00",
-              dtmEndDatetime: null,
-              strVenue: "",
-              strArtistName: "",
-              strImagePath: "",
-              strEntry: "Free",
-              mapIsActive: true,
-            };
-            mapped.push(mapApiToEventItem(master, fallbackMap));
-            continue;
-          }
+          const schedules = (master.events || []).filter((event) => event.mapIsActive);
           for (const schedule of schedules) {
-            mapped.push(mapApiToEventItem(master, schedule));
+            mapped.push(mapApiToEventItem(master, schedule, site));
           }
         }
-        if (mapped.length > 0) setItems(mapped);
-        setStatus("ready");
+        setEventResponse({ key: requestKey, items: mapped, error: null });
       })
-      .catch((error: unknown) => {
-        if (error instanceof DOMException && error.name === "AbortError") return;
-        console.warn("Events API unavailable; using bundled event list", error);
-        setStatus("fallback");
+      .catch((reason: unknown) => {
+        if (reason instanceof DOMException && reason.name === "AbortError") return;
+        const error = reason instanceof Error ? reason : new Error(String(reason));
+        console.error("Events API unavailable.", error);
+        setEventResponse({ key: requestKey, items: [], error });
       });
     return () => controller.abort();
-  }, [bookingContext.companyId, bookingContext.branchId]);
+  }, [bookingContext.branchId, bookingContext.companyId, requestKey, site]);
 
   const events = useMemo(() => {
     const withStatus = items.map((item) => ({
@@ -262,10 +229,12 @@ export function EventsSchedule() {
 
         {status === "fallback" && (
           <p role="status" className="home-copy" style={{ marginTop: "1rem", color: "#b8860b" }}>
-            Live event schedule unavailable. Showing the latest available event list.
+            Live event schedule unavailable. Please try again later.
           </p>
         )}
-        {events.length === 0 ? (
+        {status === "loading" ? (
+          <p className="sports-empty" role="status">Loading events…</p>
+        ) : events.length === 0 ? (
           <p className="sports-empty">No events scheduled right now. Please check back shortly.</p>
         ) : (
           <div className="event-cards" aria-live="polite">
@@ -302,22 +271,13 @@ export function EventsSchedule() {
                 hideSteps: "true",
                 hideCardIcon: "true",
               });
-              const checkoutHref = `${MENU_CHECKOUT_URL}?${eventParams.toString()}`;
-              const isLocalImage = item.image.startsWith("/");
-
+              const checkoutHref = appUrl ? `${appUrl}/checkout?${eventParams.toString()}` : "";
               return (
                 <article className={`event-card${isPast ? " event-card--past" : ""}`} key={item.title + item.start}>
-                  <div className="event-card__media">
-                    <span className={`event-card__badge event-card__badge--${status}`}>{badgeLabel}</span>
-                    {isLocalImage ? (
-                      <Image
-                        src={item.image}
-                        alt={item.imageAlt || item.title}
-                        width={item.imageWidth || 1024}
-                        height={item.imageHeight || 1024}
-                        loading="lazy"
-                      />
-                    ) : (
+                  {item.image && (
+                    <div className="event-card__media">
+                      <span className={`event-card__badge event-card__badge--${status}`}>{badgeLabel}</span>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={item.image}
                         alt={item.imageAlt || item.title}
@@ -326,8 +286,8 @@ export function EventsSchedule() {
                         loading="lazy"
                         style={{ objectFit: "cover", width: "100%", height: "100%" }}
                       />
-                    )}
-                  </div>
+                    </div>
+                  )}
                   <div className="event-card__body">
                     <h3 className="event-card__title">{item.title}</h3>
                     <ul className="event-card__meta">
@@ -367,10 +327,12 @@ export function EventsSchedule() {
                     <div className="event-card__actions">
                       {isPast ? (
                         <span className="event-card__btn event-card__btn--ended">Event Ended</span>
-                      ) : (
+                      ) : appUrl ? (
                         <a href={checkoutHref} className="event-card__btn event-card__btn--solid">
                           Book Event
                         </a>
+                      ) : (
+                        <span className="event-card__btn event-card__btn--ended">Booking unavailable</span>
                       )}
                     </div>
                   </div>

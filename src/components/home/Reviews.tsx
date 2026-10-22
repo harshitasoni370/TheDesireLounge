@@ -1,5 +1,3 @@
-import { GOOGLE_REVIEW_URL } from "@/lib/site";
-
 const REVIEWS = [
   { initial: "A", name: "Aman Verma", date: "2 days ago", text: "Amazing place to chill with friends. Great food, great ambience and super friendly staff!" },
   { initial: "R", name: "Riya Sharma", date: "1 week ago", text: "The food is delicious and the sports vibe is just awesome. Our go-to place in Oud Metha!" },
@@ -26,9 +24,6 @@ export function Reviews() {
             </div>
           </div>
           <p className="home-copy">4.5 Google Rating</p>
-          <a href={GOOGLE_REVIEW_URL} className="btn btn-outline btn-sm" target="_blank" rel="noopener noreferrer">
-            Read All Reviews
-          </a>
         </aside>
 
         <div className="home-reviews__cards">

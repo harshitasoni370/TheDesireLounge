@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { HeroAnimate } from "@/components/common/HeroAnimate";
-import { MAPS_URL, MENU_URL } from "@/lib/site";
+import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
+import { getDomainUrl, getMapsUrl } from "@/lib/site-config";
 
 const SLIDES = [
   "/images/index-hero-bg.webp",
@@ -13,6 +14,9 @@ const SLIDES = [
 const SLIDE_INTERVAL = 6500;
 
 export function HomeHero() {
+  const site = useSiteConfig();
+  const appUrl = getDomainUrl(site, "APP");
+  const mapsUrl = getMapsUrl(site);
   const [index, setIndex] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const reducedRef = useRef(false);
@@ -47,7 +51,7 @@ export function HomeHero() {
             className={`home-hero__slide${i === 0 ? " home-hero__slide--primary" : ""}${i === index ? " is-active" : ""}`}
             style={{ backgroundImage: `url('${src}')` }}
             role="img"
-            aria-label={i === 0 ? "Desire Sheesha Lounge dining with shisha and gourmet platters" : undefined}
+            aria-label={i === 0 ? site.siteName : undefined}
           />
         ))}
       </div>
@@ -67,9 +71,7 @@ export function HomeHero() {
 
         <HeroAnimate className="home-hero__content">
           <h1 id="hero-heading" className="home-hero__brand hero-anim">
-            DESIRE
-            <br />
-            <span className="home-hero__subbrand">SHEESHA LOUNGE</span>
+            {site.siteName}
           </h1>
           <p className="home-hero__tagline hero-anim">
             Eat. Chill. Play. <em>24/7</em>
@@ -85,7 +87,7 @@ export function HomeHero() {
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
               <circle cx="12" cy="10" r="3" />
             </svg>
-            Oud Metha, Dubai
+            {site.address}
           </p>
           <div className="home-hero__ctas hero-anim">
             <a href="#reserve" className="btn btn-primary">
@@ -95,12 +97,8 @@ export function HomeHero() {
               </svg>
               Reserve a Table
             </a>
-            <a href={MENU_URL} className="btn btn-ghost">
-              View Menu
-            </a>
-            <a href={MAPS_URL} className="btn btn-ghost" target="_blank" rel="noopener noreferrer">
-              Get Directions
-            </a>
+            {appUrl && <a href={`${appUrl}/categories.html`} className="btn btn-ghost">View Menu</a>}
+            {mapsUrl && <a href={mapsUrl} className="btn btn-ghost" target="_blank" rel="noopener noreferrer">Get Directions</a>}
           </div>
         </HeroAnimate>
       </div>
