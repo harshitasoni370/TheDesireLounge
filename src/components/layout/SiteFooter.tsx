@@ -2,13 +2,16 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { BookingLink } from "@/components/booking/BookingLink";
 import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
+import { getBookingCheckoutUrl } from "@/lib/booking";
 import { getDomainUrl, getMapsUrl, getPhoneDisplay, getPhoneHref } from "@/lib/site-config";
 
 const QUICK_LINKS = [
-  { label: "Live Sports", href: "/live-sports" },
+  { label: "Sports", href: "/live-sports" },
   { label: "Gaming Zone", href: "/#gaming-zone" },
   { label: "Events", href: "/events" },
+  { label: "Catering", href: "/catering" },
   { label: "Gallery", href: "/gallery" },
   { label: "About Us", href: "/about" },
   { label: "Reservations", href: "/#reserve" },
@@ -17,6 +20,7 @@ const QUICK_LINKS = [
 export function SiteFooter() {
   const site = useSiteConfig();
   const appUrl = getDomainUrl(site, "APP");
+  const reservationUrl = getBookingCheckoutUrl(site);
   const phoneHref = getPhoneHref(site);
   const mapsUrl = getMapsUrl(site);
 
@@ -48,10 +52,18 @@ export function SiteFooter() {
           <h3>Quick Links</h3>
           <div className="home-divider home-divider--sm" aria-hidden="true" />
           <ul>
-            {appUrl && <li><a href={`${appUrl}/categories.html`}>Menu</a></li>}
+            {appUrl && <li><a href={`${appUrl}/categories`}>Menu</a></li>}
             {QUICK_LINKS.map((link) => (
               <li key={link.label}>
-                <Link href={link.href}>{link.label}</Link>
+                {link.label === "Reservations" && reservationUrl ? (
+                  <BookingLink href={reservationUrl}>
+                    {link.label}
+                  </BookingLink>
+                ) : link.label === "Reservations" ? (
+                  <span aria-disabled="true">{link.label}</span>
+                ) : (
+                  <Link href={link.href}>{link.label}</Link>
+                )}
               </li>
             ))}
           </ul>
@@ -61,7 +73,7 @@ export function SiteFooter() {
           <h3>Our Menu</h3>
           <div className="home-divider home-divider--sm" aria-hidden="true" />
           <ul>
-            {appUrl && <li><a href={`${appUrl}/categories.html`}>Browse menu</a></li>}
+            {appUrl && <li><a href={`${appUrl}/categories`}>Browse menu</a></li>}
           </ul>
         </div>
 

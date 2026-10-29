@@ -1,4 +1,4 @@
-import { RESTAURANT_API_BASE_URL } from "@/lib/site";
+import { RESTAURANT_ASSET_BASE_URL } from "@/lib/site";
 
 export interface WebsiteDomain {
   appType: string;
@@ -9,6 +9,7 @@ export interface WebsiteDomain {
 export interface SiteConfig {
   companyId: string;
   branchId: string;
+  deviceId?: string;
   domain: string;
   siteName: string;
   logoUrl: string;
@@ -69,13 +70,19 @@ function parseDomains(value: unknown): WebsiteDomain[] {
 export function getSiteConfig(payload: unknown): SiteConfig {
   const record = unwrapConfig(payload);
   const logoPath = readRequiredString(record, "logoUrl");
-  const logo = new URL(logoPath, `${RESTAURANT_API_BASE_URL}/`);
+  const logo = new URL(logoPath, `${RESTAURANT_ASSET_BASE_URL}/`);
   const logoPathMarker = logo.pathname.toLowerCase().indexOf("/image/logo/");
   const assetPrefix = logoPathMarker > 0 ? logo.pathname.slice(1, logoPathMarker) : "";
 
   return {
     companyId: readRequiredString(record, "companyId"),
     branchId: readRequiredString(record, "branchId"),
+    deviceId:
+      typeof record.deviceId === "string"
+        ? record.deviceId.trim()
+        : typeof record.deviceID === "string"
+          ? record.deviceID.trim()
+          : undefined,
     domain: readRequiredString(record, "domain"),
     siteName: readRequiredString(record, "siteName"),
     logoUrl: logo.toString(),
@@ -136,7 +143,7 @@ export function getAssetUrl(path: string, site?: SiteConfig) {
     site?.assetPrefix && !assetPath.toLowerCase().startsWith(`${site.assetPrefix.toLowerCase()}/`)
       ? `${site.assetPrefix}/${assetPath}`
       : assetPath;
-  return `${RESTAURANT_API_BASE_URL}/${pathWithTenant}`;
+  return `${RESTAURANT_ASSET_BASE_URL}/${pathWithTenant}`;
 }
 
 export function getPhoneDisplay(site: SiteConfig) {
@@ -161,5 +168,5 @@ export function getWhatsAppHref(site: SiteConfig) {
 }
 
 export function getMapsUrl(site: SiteConfig) {
-  return site.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(site.address)}` : "";
+  return site.address ? `https://maps.google.com/?q=${encodeURIComponent(site.address)}` : "";
 }

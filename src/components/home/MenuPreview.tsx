@@ -27,12 +27,12 @@ export function MenuPreview() {
             </h2>
             <p className="home-copy">From flavorful Indian favourites to refreshing mocktails, we have something for every mood and every moment.</p>
           </div>
-          {appUrl && <a href={`${appUrl}/categories.html`} className="btn btn-outline home-menu__all">View Full Menu</a>}
+          {appUrl && <a href={`${appUrl}/categories`} className="btn btn-outline home-menu__all">View Full Menu</a>}
         </div>
 
         {appUrl && <div className="home-menu__grid">
           {MENU_CARDS.map((card) => (
-            <a href={`${appUrl}/categories.html`} className="home-menu__card" key={card.label}>
+            <a href={`${appUrl}/categories`} className="home-menu__card" key={card.label}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={card.img} alt={card.alt} loading="lazy" width={280} height={200} />
               <span>{card.label}</span>

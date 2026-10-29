@@ -2,11 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { RESTAURANT_API_PROXY_BASE_URL } from "@/lib/site";
+import { getBookingCheckoutUrl, withBookingDeviceId } from "@/lib/booking";
+import { RESTAURANT_API_BASE_URL, RESTAURANT_API_ENDPOINTS } from "@/lib/site";
 import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
-import { getAssetUrl, getDomainUrl } from "@/lib/site-config";
-
-const API_BASE = `${RESTAURANT_API_PROXY_BASE_URL}/api`;
+import { getAssetUrl } from "@/lib/site-config";
 
 type Game = {
   id: string;
@@ -24,9 +23,8 @@ type Game = {
 type GameType = "playstation" | "board-games";
 
 function endpoint(type: GameType) {
-  return type === "playstation"
-    ? `${API_BASE}/Playstation/Playstationgamelist`
-    : `${API_BASE}/BoardGame/Boardgamelist`;
+  const path = type === "playstation" ? RESTAURANT_API_ENDPOINTS.playstationGames : RESTAURANT_API_ENDPOINTS.boardGames;
+  return `${RESTAURANT_API_BASE_URL}${path}`;
 }
 
 function imageUrl(game: Game, site: ReturnType<typeof useSiteConfig>) {
@@ -37,10 +35,13 @@ export function GamesPage({ type }: { type: GameType }) {
   const site = useSiteConfig();
   const searchParams = useSearchParams();
   const [query, setQuery] = useState("");
-  const companyId = searchParams.get("companyId") || site.companyId;
-  const branchId = searchParams.get("branchId") || site.branchId;
+  const companyId = searchParams.get("companyId") || searchParams.get("cid") || site.companyId;
+  const branchId = searchParams.get("branchId") || searchParams.get("bid") || site.branchId;
+  const sessionId = searchParams.get("sessionId") || searchParams.get("tableSessionId") || searchParams.get("sid") || "";
+  const tableId = searchParams.get("tableId") || searchParams.get("tid") || "";
+  const tableNumber = searchParams.get("tableNumber") || searchParams.get("tableNo") || searchParams.get("tn") || "";
   const title = type === "playstation" ? "PlayStation Sessions" : "Board Games";
-  const appUrl = getDomainUrl(site, "APP");
+  const bookingUrl = getBookingCheckoutUrl(site);
   const requestKey = `${companyId}:${branchId}:${type}`;
   const [gameResponse, setGameResponse] = useState<{
     key: string;
@@ -84,25 +85,39 @@ export function GamesPage({ type }: { type: GameType }) {
   );
 
   function checkout(game: Game) {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("companyId", companyId);
-    params.set("branchId", branchId);
-    params.set("categoryName", type === "playstation" ? "PlayStation" : "Board Games");
-    params.set("category", "GAMING");
-    params.set("reservationCategory", "GAMING");
-    params.set("bookingType", "Gaming Session");
-    params.set("sessionType", "Gaming Session");
-    params.set("gameId", game.id);
-    params.set("gameName", game.name);
-    params.set("players", `${game.playersMin}-${game.playersMax}`);
-    params.set("duration", `${game.durationMin}-${game.durationMax} min`);
-    params.set("difficulty", game.difficulty);
-    params.set("reservationTitle", `Gaming: ${game.name}`);
-    params.set("moduleId", "3e340f23-d842-47f0-98e8-b0d458dc22dd");
-    params.set("extraDetails", JSON.stringify({ id: game.id, name: game.name }));
-    params.set("step", "about-you");
-    params.set("hideSteps", "true");
-    if (appUrl) window.location.assign(`${appUrl}/checkout?${params}`);
+    const extraParams = Object.fromEntries(
+      [...searchParams.entries()].filter(
+        ([key]) =>
+          ![
+            "cid", "companyId", "bid", "branchId", "tid", "tableId", "tn", "tableNumber", "tableNo", "tableCode",
+            "sid", "sessionId", "tableSessionId", "mid", "moduleId", "cat", "rc", "rt", "bt", "s", "hs", "hc",
+            "did", "deviceId",
+          ].includes(key),
+      ),
+    );
+    const checkoutUrl = getBookingCheckoutUrl(site, {
+      companyId,
+      branchId,
+      moduleId: "3e340f23-d842-47f0-98e8-b0d458dc22dd",
+      category: "GAMING",
+      reservationCategory: "GAMING",
+      categoryName: type === "playstation" ? "PlayStation" : "Board Games",
+      reservationTitle: `Gaming: ${game.name}`,
+      bookingType: "Gaming Session",
+      sessionId,
+      tableId,
+      tableNumber,
+      extraParams: {
+        ...extraParams,
+        gameId: game.id,
+        gameName: game.name,
+        players: `${game.playersMin}-${game.playersMax}`,
+        duration: `${game.durationMin}-${game.durationMax} min`,
+        difficulty: game.difficulty,
+        extraDetails: JSON.stringify({ id: game.id, name: game.name }),
+      },
+    });
+    if (checkoutUrl) window.location.assign(withBookingDeviceId(checkoutUrl));
   }
 
   return (
@@ -139,7 +154,7 @@ export function GamesPage({ type }: { type: GameType }) {
                 <li>{game.difficulty}</li>
               </ul>
               <div className="event-card__actions">
-                {game.isAvailable && appUrl ? <button className="event-card__btn event-card__btn--solid" type="button" onClick={() => checkout(game)}>Reserve Session</button> : <span className="event-card__btn event-card__btn--ended">{game.isAvailable ? "Booking unavailable" : "Currently Unavailable"}</span>}
+                {game.isAvailable && bookingUrl ? <button className="event-card__btn event-card__btn--solid" type="button" onClick={() => checkout(game)}>Reserve Session</button> : <span className="event-card__btn event-card__btn--ended">{game.isAvailable ? "Booking unavailable" : "Currently Unavailable"}</span>}
               </div>
             </div>
           </article>

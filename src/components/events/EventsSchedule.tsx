@@ -2,9 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { BookingLink } from "@/components/booking/BookingLink";
 import { EVENTS_API_PROXY_BASE_URL } from "@/lib/site";
+import { getBookingCheckoutUrl } from "@/lib/booking";
 import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
-import { getAssetUrl, getDomainUrl, getTodayInTimezone } from "@/lib/site-config";
+import { getAssetUrl, getTodayInTimezone } from "@/lib/site-config";
 
 const API_BASE = `${EVENTS_API_PROXY_BASE_URL}/api`;
 
@@ -133,10 +135,11 @@ export function EventsSchedule() {
   const site = useSiteConfig();
   const searchParams = useSearchParams();
   const bookingContext = {
-    companyId: searchParams.get("companyId") || site.companyId,
-    branchId: searchParams.get("branchId") || site.branchId,
-    sessionId: searchParams.get("sessionId") || searchParams.get("tableSessionId") || "",
-    tableId: searchParams.get("tableId") || "",
+    companyId: searchParams.get("companyId") || searchParams.get("cid") || site.companyId,
+    branchId: searchParams.get("branchId") || searchParams.get("bid") || site.branchId,
+    sessionId: searchParams.get("sessionId") || searchParams.get("tableSessionId") || searchParams.get("sid") || "",
+    tableId: searchParams.get("tableId") || searchParams.get("tid") || "",
+    tableNumber: searchParams.get("tableNumber") || searchParams.get("tableNo") || searchParams.get("tn") || "",
   };
   const requestKey = `${bookingContext.companyId}:${bookingContext.branchId}`;
   const [eventResponse, setEventResponse] = useState<{
@@ -148,7 +151,6 @@ export function EventsSchedule() {
   const items = useMemo(() => (loading ? [] : eventResponse.items), [eventResponse.items, loading]);
   const status = loading ? "loading" : eventResponse.error ? "fallback" : "ready";
   const today = useMemo(() => getTodayInTimezone(site.timezone), [site.timezone]);
-  const appUrl = getDomainUrl(site, "APP");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -252,26 +254,24 @@ export function EventsSchedule() {
                 offer: item.offer || "",
                 description: item.description,
               };
-              const eventParams = new URLSearchParams({
+              const checkoutHref = getBookingCheckoutUrl(site, {
                 companyId: bookingContext.companyId,
                 branchId: bookingContext.branchId,
-                ...(bookingContext.sessionId ? { sessionId: bookingContext.sessionId } : {}),
-                ...(bookingContext.tableId ? { tableId: bookingContext.tableId } : {}),
-                categoryName: "Events",
                 category: "EVENT",
                 reservationCategory: "EVENT",
-                eventName: item.title,
-                bookingType: "Event",
-                sessionType: "Event",
                 reservationTitle: item.title,
-                dateStart: item.start,
-                uaeTime: item.time,
-                extraDetails: JSON.stringify(eventDetails),
-                step: "about-you",
-                hideSteps: "true",
-                hideCardIcon: "true",
+                bookingType: "Event",
+                sessionId: bookingContext.sessionId,
+                tableId: bookingContext.tableId,
+                tableNumber: bookingContext.tableNumber,
+                extraParams: {
+                  eventName: item.title,
+                  dateStart: item.start,
+                  uaeTime: item.time,
+                  extraDetails: JSON.stringify(eventDetails),
+                  hideCardIcon: "true",
+                },
               });
-              const checkoutHref = appUrl ? `${appUrl}/checkout?${eventParams.toString()}` : "";
               return (
                 <article className={`event-card${isPast ? " event-card--past" : ""}`} key={item.title + item.start}>
                   {item.image && (
@@ -327,10 +327,10 @@ export function EventsSchedule() {
                     <div className="event-card__actions">
                       {isPast ? (
                         <span className="event-card__btn event-card__btn--ended">Event Ended</span>
-                      ) : appUrl ? (
-                        <a href={checkoutHref} className="event-card__btn event-card__btn--solid">
+                      ) : checkoutHref ? (
+                        <BookingLink href={checkoutHref} className="event-card__btn event-card__btn--solid">
                           Book Event
-                        </a>
+                        </BookingLink>
                       ) : (
                         <span className="event-card__btn event-card__btn--ended">Booking unavailable</span>
                       )}

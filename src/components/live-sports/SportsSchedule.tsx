@@ -2,8 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { BookingLink } from "@/components/booking/BookingLink";
 import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
-import { getDomainUrl, getTodayInTimezone } from "@/lib/site-config";
+import { getBookingCheckoutUrl } from "@/lib/booking";
+import { RESTAURANT_API_BASE_URL, RESTAURANT_API_ENDPOINTS } from "@/lib/site";
+import { getTodayInTimezone } from "@/lib/site-config";
 
 interface Fixture {
   sport: "football" | "cricket";
@@ -76,13 +79,14 @@ function titleCaseMonth(slug: string) {
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50];
 
-const LIVE_SPORTS_API = "/api/Livesports/GetLiveSports";
-const LIVE_SPORTS_COMPETITIONS_API = "/api/Livesports/GetLiveSportsCompetitions";
+const LIVE_SPORTS_API = RESTAURANT_API_ENDPOINTS.liveSports;
+const LIVE_SPORTS_COMPETITIONS_API = RESTAURANT_API_ENDPOINTS.liveSportsCompetitions;
 
 function getApiBase() {
-  const configured = process.env.NEXT_PUBLIC_LIVE_SPORTS_BASE;
-  if (configured) return configured.replace(/\/$/, "");
-  return "/restaurant-api";
+  const configured = process.env.NEXT_PUBLIC_LIVE_SPORTS_BASE?.trim();
+  if (!configured) return RESTAURANT_API_BASE_URL;
+  const baseUrl = configured.replace(/\/+$/, "");
+  return /\/api$/i.test(baseUrl) ? baseUrl : `${baseUrl}/api`;
 }
 /* ------------------------------------------------------------------ *
  * Response helpers
@@ -193,8 +197,8 @@ function normalizeCompetition(item: AnyRecord): string {
 
 function buildBookingUrl(
   item: Fixture,
-  context: { companyId: string; branchId: string; sessionId: string; tableId: string },
-  appUrl: string,
+  context: { companyId: string; branchId: string; sessionId: string; tableId: string; tableNumber: string },
+  site: ReturnType<typeof useSiteConfig>,
 ) {
   const details = {
     id: item.id || "",
@@ -208,15 +212,19 @@ function buildBookingUrl(
     uaeTime: item.time,
     channel: item.channel,
   };
-  const params = new URLSearchParams({
+  return getBookingCheckoutUrl(site, {
     companyId: context.companyId,
     branchId: context.branchId,
-    ...(context.sessionId ? { sessionId: context.sessionId } : {}),
-    ...(context.tableId ? { tableId: context.tableId } : {}),
+    category: "LIVE_SPORTS",
+    reservationCategory: "LIVE_SPORTS",
     categoryName: "Live Sports",
-    category: "EVENT",
-    reservationCategory: "EVENT",
-    sessionType: "Live Sports",
+    reservationTitle: item.event,
+    bookingType: "Live Sports",
+    sessionId: context.sessionId,
+    tableId: context.tableId,
+    tableNumber: context.tableNumber,
+    hideCurrentSession: true,
+    extraParams: {
     eventName: item.event,
     competitionName: item.competition,
     sportCategory: item.sport,
@@ -226,15 +234,11 @@ function buildBookingUrl(
     dateStart: item.start,
     uaeTime: item.time,
     channel: item.channel,
-    reservationTitle: item.event,
     extraDetails: JSON.stringify(details),
-    step: "about-you",
-    hideSteps: "true",
     hideCardIcon: "true",
-    hideCurrentSession: "true",
     showCurrentTable: "false",
+    },
   });
-  return `${appUrl}/checkout?${params.toString()}`;
 }
 
 function isAbort(error: unknown) {
@@ -283,12 +287,13 @@ async function requestJson(path: string, body: Record<string, string>, signal: A
 export function SportsSchedule() {
   const site = useSiteConfig();
   const searchParams = useSearchParams();
-  const companyId = searchParams.get("companyId") || site.companyId;
-  const branchId = searchParams.get("branchId") || site.branchId;
-  const sessionId = searchParams.get("sessionId") || searchParams.get("tableSessionId") || "";
-  const tableId = searchParams.get("tableId") || "";
-  const bookingContext = { companyId, branchId, sessionId, tableId };
-  const appUrl = getDomainUrl(site, "APP");
+  const companyId = searchParams.get("companyId") || searchParams.get("cid") || site.companyId;
+  const branchId = searchParams.get("branchId") || searchParams.get("bid") || site.branchId;
+  const sessionId = searchParams.get("sessionId") || searchParams.get("tableSessionId") || searchParams.get("sid") || "";
+  const tableId = searchParams.get("tableId") || searchParams.get("tid") || "";
+  const tableNumber = searchParams.get("tableNumber") || searchParams.get("tableNo") || searchParams.get("tn") || "";
+  const bookingContext = { companyId, branchId, sessionId, tableId, tableNumber };
+  const bookingUrl = getBookingCheckoutUrl(site);
 
   const [reloadKey, setReloadKey] = useState(0);
   const requestKey = `${companyId}:${branchId}:${reloadKey}`;
@@ -640,10 +645,10 @@ export function SportsSchedule() {
                   <dd>{item.channel}</dd>
                 </div>
               </dl>
-              {appUrl && (
-                <a className="sports-card__book" href={buildBookingUrl(item, bookingContext, appUrl)}>
+              {bookingUrl && (
+                <BookingLink className="sports-card__book" href={buildBookingUrl(item, bookingContext, site)}>
                   Book a Table
-                </a>
+                </BookingLink>
               )}
             </article>
           ))}

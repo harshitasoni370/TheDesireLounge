@@ -34,7 +34,7 @@ export default function GalleryPage() {
           },
           {
             label: "Watch Videos",
-            href: "#gallery-grid",
+            href: "#gallery-grid-videos",
             variant: "ghost",
             icon: (
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">

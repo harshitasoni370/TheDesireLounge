@@ -37,6 +37,11 @@ function sortImages(items: GalleryImage[]) {
   });
 }
 
+function getVideoTitle(video: GalleryVideo) {
+  if (/^whatsapp video/i.test(video.name)) return "Desire Lounge Experience";
+  return video.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ");
+}
+
 type LightboxItem = { kind: "image"; item: GalleryImage } | { kind: "video"; item: GalleryVideo };
 
 export function GalleryGrid() {
@@ -47,6 +52,19 @@ export function GalleryGrid() {
   const [filter, setFilter] = useState("all");
   const [shown, setShown] = useState(PAGE_SIZE);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [failedVideoSrc, setFailedVideoSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    const selectVideoTabFromHash = () => {
+      if (window.location.hash === "#gallery-grid-videos") {
+        setTab("videos");
+        setShown(PAGE_SIZE);
+      }
+    };
+    selectVideoTabFromHash();
+    window.addEventListener("hashchange", selectVideoTabFromHash);
+    return () => window.removeEventListener("hashchange", selectVideoTabFromHash);
+  }, []);
 
   function changeTab(next: "images" | "videos") {
     setTab(next);
@@ -67,11 +85,15 @@ export function GalleryGrid() {
   const visible = list.slice(0, shown);
   const hasMore = shown < list.length;
 
-  const openLightbox = (index: number) => setLightboxIndex(index);
+  const openLightbox = (index: number) => {
+    setFailedVideoSrc(null);
+    setLightboxIndex(index);
+  };
   const closeLightbox = () => setLightboxIndex(null);
   const stepLightbox = (delta: number) => {
     if (lightboxIndex === null) return;
     const next = (lightboxIndex + delta + visible.length) % visible.length;
+    setFailedVideoSrc(null);
     setLightboxIndex(next);
   };
 
@@ -120,6 +142,7 @@ export function GalleryGrid() {
             </button>
             <button
               type="button"
+              id="gallery-grid-videos"
               className={`gallery-tabs__btn${tab === "videos" ? " is-active" : ""}`}
               role="tab"
               aria-selected={tab === "videos"}
@@ -165,13 +188,24 @@ export function GalleryGrid() {
                 </button>
               ))
             : (visible as GalleryVideo[]).map((vid, i) => (
-                <button type="button" key={vid.src} className="gallery-mosaic__item gallery-video-thumb" onClick={() => openLightbox(i)}>
-                  <video src={vid.src} muted playsInline preload="metadata" aria-label={vid.alt} />
-                  <span className="gallery-video-thumb__play" aria-hidden="true">
+                <button type="button" key={vid.src} className="gallery-mosaic__item gallery-mosaic__item--video gallery-video-thumb" onClick={() => openLightbox(i)}>
+                  <video
+                    className="gallery-video-thumb__media"
+                    src={vid.src}
+                    poster="/images/index-hero-bg.webp"
+                    muted
+                    playsInline
+                    preload="metadata"
+                    aria-label={getVideoTitle(vid)}
+                    onLoadedData={(event) => event.currentTarget.closest("button")?.classList.add("is-ready")}
+                    onError={(event) => event.currentTarget.closest("button")?.classList.add("is-fallback")}
+                  />
+                  <span className="gallery-play" aria-hidden="true">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                       <polygon points="8 5 20 12 8 19 8 5" />
                     </svg>
                   </span>
+                  <span className="gallery-video-thumb__label">{getVideoTitle(vid)}</span>
                 </button>
               ))}
         </div>
@@ -201,10 +235,29 @@ export function GalleryGrid() {
           <figure className="gallery-lightbox__figure">
             {activeLightboxItem.kind === "image" ? (
               <img src={activeLightboxItem.item.src} alt={activeLightboxItem.item.alt} />
+            ) : failedVideoSrc === activeLightboxItem.item.src ? (
+              <div className="gallery-video-unavailable" role="alert">
+                <p>This video is temporarily unavailable. Please try again later.</p>
+                <button type="button" className="btn btn-ghost" onClick={() => setFailedVideoSrc(null)}>
+                  Try again
+                </button>
+              </div>
             ) : (
-              <video src={activeLightboxItem.item.src} controls playsInline preload="metadata" autoPlay />
+              <video
+                key={activeLightboxItem.item.src}
+                src={activeLightboxItem.item.src}
+                controls
+                playsInline
+                preload="metadata"
+                autoPlay
+                onError={() => setFailedVideoSrc(activeLightboxItem.item.src)}
+              />
             )}
-            <figcaption className="gallery-lightbox__caption">{activeLightboxItem.item.alt}</figcaption>
+            <figcaption className="gallery-lightbox__caption">
+              {activeLightboxItem.kind === "video"
+                ? getVideoTitle(activeLightboxItem.item)
+                : activeLightboxItem.item.alt}
+            </figcaption>
           </figure>
           <button type="button" className="gallery-lightbox__nav gallery-lightbox__nav--next" onClick={() => stepLightbox(1)} aria-label="Next item">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">

@@ -4,7 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { NAV_LINKS, NAV_LINKS_TAIL, GAMING_LINKS } from "@/lib/site";
+import { BookingLink } from "@/components/booking/BookingLink";
+import { NAV_LINKS, NAV_LINKS_TAIL, GAMING_LINKS, type NavLinkItem } from "@/lib/site";
+import { getBookingCheckoutUrl } from "@/lib/booking";
 import { getDomainUrl } from "@/lib/site-config";
 import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
 
@@ -46,6 +48,23 @@ export function SiteHeader() {
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
   const appUrl = getDomainUrl(site, "APP");
   const loungeUrl = getDomainUrl(site, "DL");
+  const reservationUrl = getBookingCheckoutUrl(site);
+  const renderNavLink = (item: NavLinkItem) =>
+    item.external ? (
+      <a key={item.label} href={item.href} className="site-nav__link" onClick={closeMobileNav}>
+        {item.label}
+      </a>
+    ) : (
+      <Link
+        key={item.label}
+        href={item.href}
+        className={`site-nav__link${isActive(item.href) ? " is-active" : ""}`}
+        aria-current={isActive(item.href) ? "page" : undefined}
+        onClick={closeMobileNav}
+      >
+        {item.label}
+      </Link>
+    );
 
   return (
     <header className={`site-header${scrolled ? " is-scrolled" : ""}`} id="site-header">
@@ -58,8 +77,9 @@ export function SiteHeader() {
         </Link>
 
         <nav className={`site-nav${navOpen ? " is-open" : ""}`} id="site-nav" aria-label="Primary" ref={navRef}>
+          {NAV_LINKS.filter((item) => item.href === "/").map(renderNavLink)}
           {appUrl && (
-            <a href={`${appUrl}/categories.html`} className="site-nav__link" onClick={closeMobileNav}>
+            <a href={`${appUrl}/categories`} className="site-nav__link" onClick={closeMobileNav}>
               Menu
             </a>
           )}
@@ -68,23 +88,7 @@ export function SiteHeader() {
               Lounge
             </a>
           )}
-          {NAV_LINKS.map((item) =>
-            item.external ? (
-              <a key={item.label} href={item.href} className="site-nav__link" onClick={closeMobileNav}>
-                {item.label}
-              </a>
-            ) : (
-              <Link
-                key={item.label}
-                href={item.href}
-                className={`site-nav__link${isActive(item.href) ? " is-active" : ""}`}
-                aria-current={isActive(item.href) ? "page" : undefined}
-                onClick={closeMobileNav}
-              >
-                {item.label}
-              </Link>
-            )
-          )}
+          {NAV_LINKS.filter((item) => item.href !== "/").map(renderNavLink)}
 
           <div className={`site-nav__item site-nav__item--dropdown${gamingOpen ? " is-open" : ""}`}>
             <button
@@ -126,13 +130,23 @@ export function SiteHeader() {
         </nav>
 
         <div className="site-header__actions">
-          <Link href="/#reserve" className="site-header__cta">
+          {reservationUrl ? (
+            <BookingLink href={reservationUrl} className="site-header__cta">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <path d="M16 2v4M8 2v4M3 10h18M8 15h2M8 18h2M14 15h2M14 18h2" />
+              </svg>
+              <span>Reserve a Table</span>
+            </BookingLink>
+          ) : (
+            <span className="site-header__cta" aria-disabled="true">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
               <rect x="3" y="4" width="18" height="18" rx="2" />
               <path d="M16 2v4M8 2v4M3 10h18M8 15h2M8 18h2M14 15h2M14 18h2" />
             </svg>
             <span>Reserve a Table</span>
-          </Link>
+            </span>
+          )}
           <button
             type="button"
             className="site-header__toggle"

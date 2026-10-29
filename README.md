@@ -32,10 +32,11 @@ The tenant asset folder is inferred from the configured logo path and is reused
 for API-provided event and game images.
 
 Set these environment variables before starting local development to configure
-the API targets:
+the API targets. Restaurant API endpoint paths are appended to the configured
+`/api` base URL; asset URLs continue to use the API host root.
 
 ```bash
-NEXT_PUBLIC_RESTAURANT_API_BASE_URL=https://restaurents-api.cylsys.com
+NEXT_PUBLIC_RESTAURANT_API_BASE_URL=https://restaurents-api.cylsys.com/api/
 NEXT_PUBLIC_EVENTS_API_BASE_URL=https://fumesandflavoursapi.cylsysuat.com
 # NEXT_PUBLIC_WEBSITE_CONFIG_API_URL=https://fumesandflavoursapi.cylsysuat.com/api/WebsiteUrl/by-domain
 NEXT_PUBLIC_WEBSITE_CONFIG_API_URL=https://restaurents-api.cylsys.com/api/WebsiteUrl/by-domain
@@ -57,6 +58,7 @@ src/
     gallery/page.tsx    Gallery
     live-sports/page.tsx  Live Sports fixtures
     events/page.tsx      Events schedule
+    catering/page.tsx    Catering services and gallery
     globals.css         Tailwind + brand theme tokens
     legacy.css           Original site.css, ported as-is for exact visual parity
 
@@ -89,10 +91,12 @@ src/
   Vibes, Roboto, Playfair Display) rather than `next/font`, since the sandboxed build
   environment here can't reach `fonts.googleapis.com` at build time — functionally identical
   once deployed with normal internet access.
-- **Tenant-fed pages**: the site profile, events, games, sports, reservation requests, and
-  booking links use API data and the IDs resolved for the active domain. Gallery assets and
+- **Tenant-fed pages**: the site profile, events, games, and sports use API data; booking
+  links use the IDs resolved for the active domain. Gallery assets and
   editorial landing-page content remain bundled because the website configuration response
   does not contain those content collections.
+- **Reservations**: all table, event, sports, and gaming booking links open the configured APP
+  checkout with the venue IDs and checkout parameters used by the Digital Lounge flow.
 - **Animations**: the original used GSAP (loaded from a CDN) for the hero fade-in. That's
   reproduced with the native Web Animations API in `HeroAnimate.tsx` — no extra dependency,
   same visual effect, and it fails safe (content is never left invisible) for

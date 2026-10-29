@@ -1,4 +1,9 @@
+"use client";
+
 import Link from "next/link";
+import { BookingLink } from "@/components/booking/BookingLink";
+import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
+import { getBookingCheckoutUrl, type BookingOptions } from "@/lib/booking";
 
 export function CtaBanner({
   icon,
@@ -8,6 +13,7 @@ export function CtaBanner({
   ctaLabel,
   ctaHref,
   className,
+  booking,
 }: {
   icon: React.ReactNode;
   title: string;
@@ -16,7 +22,11 @@ export function CtaBanner({
   ctaLabel: string;
   ctaHref: string;
   className?: string;
+  booking?: BookingOptions;
 }) {
+  const site = useSiteConfig();
+  const bookingUrl = ctaHref === "/#reserve" ? getBookingCheckoutUrl(site, booking) : "";
+
   return (
     <section className={`gallery-cta${className ? ` ${className}` : ""}`} aria-labelledby="cta-heading">
       <div className="home-container gallery-cta__inner">
@@ -32,7 +42,15 @@ export function CtaBanner({
             <p className="gallery-cta__script text-script">{script}</p>
           </div>
         </div>
-        {ctaHref.startsWith("/") ? (
+        {bookingUrl ? (
+          <BookingLink href={bookingUrl} className="btn btn-primary gallery-cta__btn">
+            {ctaLabel}
+          </BookingLink>
+        ) : ctaHref === "/#reserve" ? (
+          <span className="btn btn-primary gallery-cta__btn" aria-disabled="true">
+            {ctaLabel}
+          </span>
+        ) : ctaHref.startsWith("/") ? (
           <Link href={ctaHref} className="btn btn-primary gallery-cta__btn">
             {ctaLabel}
           </Link>

@@ -36,6 +36,7 @@ function EventsContent() {
           {
             label: "Reserve a Table",
             href: "/#reserve",
+            booking: { category: "EVENT", reservationCategory: "EVENT" },
             variant: "ghost",
             icon: (
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -60,6 +61,7 @@ function EventsContent() {
         script="Eat. Chill. Celebrate."
         ctaLabel="Reserve a Table"
         ctaHref="/#reserve"
+        booking={{ category: "EVENT", reservationCategory: "EVENT" }}
       />
     </main>
   );

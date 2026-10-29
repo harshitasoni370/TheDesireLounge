@@ -80,6 +80,7 @@ function LiveSportsContent() {
           {
             label: "Reserve for Match Night",
             href: "/#reserve",
+            booking: { category: "LIVE_SPORTS", reservationCategory: "LIVE_SPORTS" },
             variant: "ghost",
             icon: (
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -105,6 +106,7 @@ function LiveSportsContent() {
         script="Eat. Chill. Cheer."
         ctaLabel="Reserve a Table"
         ctaHref="/#reserve"
+        booking={{ category: "LIVE_SPORTS", reservationCategory: "LIVE_SPORTS" }}
       />
     </main>
   );

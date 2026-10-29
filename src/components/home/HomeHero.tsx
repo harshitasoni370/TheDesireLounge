@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { HeroAnimate } from "@/components/common/HeroAnimate";
+import { BookingLink } from "@/components/booking/BookingLink";
 import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
+import { getBookingCheckoutUrl } from "@/lib/booking";
 import { getDomainUrl, getMapsUrl } from "@/lib/site-config";
 
 const SLIDES = [
@@ -16,6 +18,7 @@ const SLIDE_INTERVAL = 6500;
 export function HomeHero() {
   const site = useSiteConfig();
   const appUrl = getDomainUrl(site, "APP");
+  const bookingUrl = getBookingCheckoutUrl(site);
   const mapsUrl = getMapsUrl(site);
   const [index, setIndex] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -90,14 +93,18 @@ export function HomeHero() {
             {site.address}
           </p>
           <div className="home-hero__ctas hero-anim">
-            <a href="#reserve" className="btn btn-primary">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <rect x="3" y="4" width="18" height="18" rx="2" />
-                <path d="M16 2v4M8 2v4M3 10h18" />
-              </svg>
-              Reserve a Table
-            </a>
-            {appUrl && <a href={`${appUrl}/categories.html`} className="btn btn-ghost">View Menu</a>}
+            {bookingUrl ? (
+              <BookingLink href={bookingUrl} className="btn btn-primary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <path d="M16 2v4M8 2v4M3 10h18" />
+                </svg>
+                Reserve a Table
+              </BookingLink>
+            ) : (
+              <span className="btn btn-primary" aria-disabled="true">Booking unavailable</span>
+            )}
+            {appUrl && <a href={`${appUrl}/categories`} className="btn btn-ghost">View Menu</a>}
             {mapsUrl && <a href={mapsUrl} className="btn btn-ghost" target="_blank" rel="noopener noreferrer">Get Directions</a>}
           </div>
         </HeroAnimate>

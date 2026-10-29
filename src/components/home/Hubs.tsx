@@ -17,6 +17,7 @@ export function Hubs() {
         </article>
 
         <article className="home-hub" id="events">
+          <div className="home-hub__media" style={{ ["--hub-img" as string]: "url('https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=900&q=80')" }} />
           <div className="home-hub__body">
             <h2 className="home-hub__title">Offers &amp; Events</h2>
             <p className="home-hub__copy">Exciting offers, special nights and events you don&rsquo;t want to miss.</p>
